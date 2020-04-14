@@ -59,7 +59,7 @@
 					:chartData="ConfirmedCases"
 					:lineWidth=3 />
 			</CCardBody>
-			<CCardFooter>
+			<CCardFooter class="d-none">
 				<CRow class="text-center">
 					<CCol md sm="12" class="mb-sm-2 mb-0">
 						<div class="text-muted">Visits</div>
