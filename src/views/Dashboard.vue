@@ -669,7 +669,8 @@ export default {
 			})
 		},
 		getActiveCases() {
-			axios.get(process.env.SERVER_URL + '/data/getActiveCases').then((resp) => {
+			const apiURL = process.env.SERVER_URL + '/data/getActiveCases'
+			axios.get(apiURL).then((resp) => {
 				this.ActiveCases = resp.data
 			})
 		},
