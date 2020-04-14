@@ -664,17 +664,17 @@ export default {
 	methods: {
 		getLabels() {
 			// get from /getLabels
-			axios.get("http://localhost/data/getLabels").then((resp) => {
+			axios.get( `${process.env.SERVER_URL}/data/getLabels`).then((resp) => {
 				this.chartLabels = resp.data
 			})
 		},
 		getActiveCases() {
-			axios.get("http://localhost/data/getActiveCases").then((resp) => {
+			axios.get(`${process.env.SERVER_URL}/data/getActiveCases`).then((resp) => {
 				this.ActiveCases = resp.data
 			})
 		},
 		getConfirmedCases() {
-			axios.get("http://localhost/data/getConfirmedCases").then((resp) => {
+			axios.get(`${process.env.SERVER_URL}/data/getConfirmedCases`).then((resp) => {
 				this.ConfirmedCases = resp.data
 			})
 		},
