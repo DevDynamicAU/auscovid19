@@ -57,25 +57,17 @@ app.options('*', cors(corsOptions))
 app.use(compression())
 app.use(helmet())
 
-//app.use(express.static('../public'))
 app.use(serveStatic(path.join(__dirname, '..', 'dist')))
 app.use(require('./app/routes'))
 const port = process.env.PORT || 80;
 
-//pf.getPortPromise({
-//	port: process.env.START_PORT,	// min port
-//	stopPort: process.env.STOP_PORT	// max port
-//}).then((port) => {
-		app.listen(port, (err) => {
-			if (err) {
-				_logger.error('Throwing err from initDB in server.js')
-				throw err
-			}
+app.listen(port, (err) => {
+	if (err) {
+		_logger.error('Throwing err from initDB in server.js')
+		throw err
+	}
 
-			_logger.info(`API Server started http://localhost:${port}`) // todo move location to process.env
-		})
-//}).catch(() => {
-//	_logger.error(`Failed to find an available port between ${process.env.START_PORT} and ${process.env.STOP_PORT}`)
-//})
+	_logger.info(`API Server started http://::${port}`)
+})
 
 module.exports = app // for testing

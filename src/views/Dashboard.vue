@@ -669,7 +669,15 @@ export default {
 			})
 		},
 		getActiveCases() {
-			axios.get("https://auscovid19.herokuapp.com/data/getActiveCases").then((resp) => {
+			let apiURL = ""
+
+			if (typeof process.env.SERVER_URL == "undefined") {
+				apiURL = `${window.location.protocol}//${window.location.hostname}/data/getActiveCases`
+			} else {
+				apiURL = `${process.env.SERVER_URL}data/getActiveCases`
+			}
+			console.log(apiURL, 'utl')
+			axios.get(apiURL).then((resp) => {
 				this.ActiveCases = resp.data
 			})
 		},
