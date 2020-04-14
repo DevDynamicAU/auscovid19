@@ -664,18 +664,17 @@ export default {
 	methods: {
 		getLabels() {
 			// get from /getLabels
-			axios.get( `${process.env.SERVER_URL}/data/getLabels`).then((resp) => {
+			axios.get( 'https://auscovid19.herokuapp.com//data/getLabels').then((resp) => {
 				this.chartLabels = resp.data
 			})
 		},
 		getActiveCases() {
-			const apiURL = process.env.SERVER_URL + '/data/getActiveCases'
-			axios.get(apiURL).then((resp) => {
+			axios.get("https://auscovid19.herokuapp.com/data/getActiveCases").then((resp) => {
 				this.ActiveCases = resp.data
 			})
 		},
 		getConfirmedCases() {
-			axios.get(`${process.env.SERVER_URL}/data/getConfirmedCases`).then((resp) => {
+			axios.get('https://auscovid19.herokuapp.com/data/getConfirmedCases').then((resp) => {
 				this.ConfirmedCases = resp.data
 			})
 		},
