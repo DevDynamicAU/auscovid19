@@ -657,7 +657,7 @@ export default {
 		};
 	},
 	mounted: function () {
-		this.getLabels();
+		//this.getLabels();
 		this.getActiveCases();
 		this.getConfirmedCases();
 	},
@@ -669,7 +669,7 @@ export default {
 			})
 		},
 		getActiveCases() {
-			axios.get(`${process.env.SERVER_URL}/data/getActiveCases`).then((resp) => {
+			axios.get(`https://auscovid19.herokuapp.com/data/getActiveCases`).then((resp) => {
 				this.ActiveCases = resp.data
 			})
 		},
