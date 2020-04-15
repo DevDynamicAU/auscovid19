@@ -30,8 +30,9 @@ router.get('/getActiveCases/:id',
 	dataController.getActiveCases
 )
 
-router.get("/test", (req, res) => {
-	res.status(200).json("testing testing")
-})
+router.get("/getNbrOfDeaths",
+	trimRequest.all,
+	dataController.getNbrOfDeaths
+)
 
 module.exports = router

@@ -10,97 +10,113 @@
 import { CChartLine } from "@coreui/vue-chartjs";
 import { getStyle, hexToRgba } from "@coreui/utils/src";
 
-function random(min, max) {
-	return Math.floor(Math.random() * (max - min + 1) + min);
-}
-
 export default {
-	name: "MainChartExample",
+	name: "NbrOfDeaths",
 	components: {
 		CChartLine
 	},
 	props: {
-		chartLabels: Array,
-		chartData: Array
+		//chartLabels: Array,
+		chartData: Array,
+		lineWidth: Number
 	},
 	computed: {
 		defaultDatasets() {
-			// '#4dbd74'
-			const confirmedCasesColour = "#4dbd74";
+			const qldColour = "#800000"
+			const nswColour = "skyblue"
+			const actColour = "#00005B"
+			const vicColour = "navy"
+			const tasColour = "#006A4E"
+			const ntColour = "#E65A00"
+			const saColour = "gold"
+			const waColour = "black"
 
-			//'#20a8d8'
-			const deathsColour = "#f86c6b";
-
-			//'#f86c6b'
-			const recoveredColour = "#2e9ba6";
-
-			const activeCasesColour = "green"
-			const rateOfGrowthColour = "red"
-
-			let elements = this.chartLabels.length;
-			const confirmedCases = [];
-			const deaths = [];
-			const recovered = [];
-			const activeCases = [];
-			const rateOfGrowth = [];
-
-			for (let i = 0; i <= elements; i++) {
-				confirmedCases.push(random(0, 200));
-				deaths.push(random(0, 200));
-				recovered.push(random(0,200));
-				activeCases.push(random(0, 200))
-				rateOfGrowth.push(65);
-			}
+			const QLD = this.chartData.filter( v => v.ProviceState == "Queensland").map( v => v.Deaths );
+			const NSW = this.chartData.filter( v => v.ProviceState == "New South Wales").map( v => v.Deaths );
+			const ACT = this.chartData.filter( v => v.ProviceState == "Australian Capital Territory").map( v => v.Deaths );
+			const VIC = this.chartData.filter( v => v.ProviceState == "Victoria").map( v => v.Deaths );
+			const TAS = this.chartData.filter( v => v.ProviceState == "Tasmania").map( v => v.Deaths );
+			const NT  = this.chartData.filter( v => v.ProviceState == "Northern Territory").map( v => v.Deaths );
+			const SA  = this.chartData.filter( v => v.ProviceState == "South Australia").map( v => v.Deaths );
+			const WA  = this.chartData.filter( v => v.ProviceState == "Western Australia").map( v => v.Deaths );
 
 			return [
 				{
-					label: "Confirmed Cases",
-					backgroundColor: hexToRgba(confirmedCasesColour, 10),
-					borderColor: confirmedCasesColour,
-					pointHoverBackgroundColor: confirmedCasesColour,
-					borderWidth: 2,
-					data: confirmedCases
+					label: "QLD",
+					backgroundColor: "transparent",
+					borderColor: qldColour,
+					pointHoverBackgroundColor: qldColour,
+					borderWidth: this.lineWidth,
+					data: QLD
 				},
 				{
-					label: "No. of Deaths",
+					label: "NSW",
 					backgroundColor: "transparent",
-					borderColor: deathsColour,
-					pointHoverBackgroundColor: deathsColour,
-					borderWidth: 2,
-					data: deaths
+					borderColor: nswColour,
+					pointHoverBackgroundColor: nswColour,
+					borderWidth: this.lineWidth,
+					data: NSW
 				},
 				{
-					label: "Recovered Cases",
+					label: "ACT",
 					backgroundColor: "transparent",
-					borderColor: recoveredColour,
-					pointHoverBackgroundColor: recoveredColour,
-					borderWidth: 1,
-					data: recovered
+					borderColor: actColour,
+					pointHoverBackgroundColor: actColour,
+					borderWidth: this.lineWidth,
+					data: ACT
 				},
 				{
-					label: "Active Cases",
+					label: "VIC",
 					backgroundColor: "transparent",
-					borderColor: activeCasesColour,
-					pointHoverBackgroundColor: activeCasesColour,
-					borderWidth: 1,
-					data: activeCases
+					borderColor: vicColour,
+					pointHoverBackgroundColor: vicColour,
+					borderWidth: this.lineWidth,
+					data: VIC
 				},
 				{
-					label: "Rate of Growth",
+					label: "TAS",
 					backgroundColor: "transparent",
-					borderColor: rateOfGrowthColour,
-					pointHoverBackgroundColor: rateOfGrowthColour,
-					borderWidth: 1,
-					borderDash: [8, 5],
-					data: rateOfGrowth
+					borderColor: tasColour,
+					pointHoverBackgroundColor: tasColour,
+					borderWidth: this.lineWidth,
+					data: TAS
+				},
+								{
+					label: "NT",
+					backgroundColor: "transparent",
+					borderColor: ntColour,
+					pointHoverBackgroundColor: ntColour,
+					borderWidth: this.lineWidth,
+					data: NT
+				},
+								{
+					label: "SA",
+					backgroundColor: "transparent",
+					borderColor: saColour,
+					pointHoverBackgroundColor: saColour,
+					borderWidth: this.lineWidth,
+					data: SA
+				},
+				{
+					label: "WA",
+					backgroundColor: "transparent",
+					borderColor: waColour,
+					pointHoverBackgroundColor: waColour,
+					borderWidth: this.lineWidth,
+					data: WA
 				}
 			];
+		},
+		chartLabels() {
+			// some black magic to remove the duplicate dates from the this.ChartData object - https://medium.com/dailyjs/how-to-remove-array-duplicates-in-es6-5daa8789641c
+			return [...new Set(this.chartData.map( v => v.Date)) ]
 		},
 		defaultOptions() {
 			return {
 				maintainAspectRatio: false,
+				responsive: true,
 				legend: {
-					display: false
+					display: true
 				},
 				scales: {
 					xAxes: [
@@ -115,8 +131,7 @@ export default {
 							ticks: {
 								beginAtZero: true,
 								maxTicksLimit: 5,
-								stepSize: Math.ceil(250 / 5),
-								max: 250
+								stepSize: 100 //Math.ceil(250 / 5)
 							},
 							gridLines: {
 								display: true
