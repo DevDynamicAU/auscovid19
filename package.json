@@ -1,12 +1,10 @@
 {
-  "name": "@coreui/coreui-free-vue-admin-template",
-  "version": "3.0.2",
-  "description": "Open Source Bootstrap Admin Template",
+  "name": "auscorvid19",
+  "version": "2.0.0",
+  "description": "Australian COVID-19 data representation",
   "author": {
     "name": "CoreUI",
-    "url": "https://coreui.io",
-    "github": "https://github.com/coreui",
-    "twitter": "https://twitter.com/core_ui"
+    "url": "https://auscovid19.herokuapp.com"
   },
   "contributors": [
     {
@@ -14,8 +12,8 @@
       "url": "https://github.com/orgs/coreui/people"
     }
   ],
-  "homepage": "http://coreui.io",
-  "copyright": "Copyright 2020 creativeLabs Łukasz Holeczek",
+  "homepage": "http://auscovid19.herokuapp.com",
+  "copyright": "Copyright 2020 DevDynamic",
   "license": "MIT",
   "scripts": {
 	"postinstall": "if test \"$NODE_ENV\" = \"production\" ; then npm run build ; fi ",
