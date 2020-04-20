@@ -29,6 +29,20 @@
 					:chartData="ActiveCases"
 					:lineWidth=3 />
 			</CCardBody>
+			<CCardFooter>
+				<CRow class="text-center w-25">
+					<CCol md sm="12" class="mb-sm-2 mb-0">
+						<div class="text-muted">Active / Total Confirmed Cases</div>
+						<strong>{{ totalActive.value }} / {{ totalConfirmed }}</strong>
+						<CProgress
+							class="progress-xs mt-2"
+							:precision="1"
+							color="success"
+							:value="totalActive.pct"
+						/>
+					</CCol>
+				</CRow>
+			</CCardFooter>
 		</CCard>
 		<CCard>
 			<CCardBody>
@@ -59,55 +73,16 @@
 					:chartData="ConfirmedCases"
 					:lineWidth=3 />
 			</CCardBody>
-			<CCardFooter class="d-none">
-				<CRow class="text-center">
+			<CCardFooter>
+				<CRow class="text-center w-25">
 					<CCol md sm="12" class="mb-sm-2 mb-0">
-						<div class="text-muted">Visits</div>
-						<strong>29.703 Users (40%)</strong>
+						<div class="text-muted">Total</div>
+						<strong>{{ totalConfirmed }}</strong>
 						<CProgress
-							class="progress-xs mt-2"
+							class="progress-xs mt-2 d-none"
 							:precision="1"
 							color="success"
-							:value="40"
-						/>
-					</CCol>
-					<CCol md sm="12" class="mb-sm-2 mb-0 d-md-down-none">
-						<div class="text-muted">Unique</div>
-						<strong>24.093 Users (20%)</strong>
-						<CProgress
-							class="progress-xs mt-2"
-							:precision="1"
-							color="info"
-							:value="20"
-						/>
-					</CCol>
-					<CCol md sm="12" class="mb-sm-2 mb-0">
-						<div class="text-muted">Pageviews</div>
-						<strong>78.706 Views (60%)</strong>
-						<CProgress
-							class="progress-xs mt-2"
-							:precision="1"
-							color="warning"
-							:value="60"
-						/>
-					</CCol>
-					<CCol md sm="12" class="mb-sm-2 mb-0">
-						<div class="text-muted">New Users</div>
-						<strong>22.123 Users (80%)</strong>
-						<CProgress
-							class="progress-xs mt-2"
-							:precision="1"
-							color="danger"
-							:value="80"
-						/>
-					</CCol>
-					<CCol md sm="12" class="mb-sm-2 mb-0 d-md-down-none">
-						<div class="text-muted">Bounce Rate</div>
-						<strong>Average Rate (40.15%)</strong>
-						<CProgress
-							class="progress-xs mt-2"
-							:precision="1"
-							:value="40"
+							:value="totalConfirmed"
 						/>
 					</CCol>
 				</CRow>
@@ -192,6 +167,27 @@ export default {
 		this.getNbrOfDeaths();
 	},
 	computed: {
+		totalActive: function () {
+			let result = -1
+
+			if (this.ActiveCases.length > 0) {
+				result = this.ActiveCases.filter(v => v.type == "Total")[0].count 
+			}
+
+			return {
+				value: result,
+				pct: (result / this.totalConfirmed) * 100
+			}
+		},
+		totalConfirmed: function () {
+			let result = -1
+
+			if (this.ConfirmedCases.length > 0) {
+				result = this.ConfirmedCases.filter(v => v.type == "Total")[0].count 
+			}
+
+			return result
+		},
 		totalDeaths: function () {
 			let result = -1
 
@@ -200,7 +196,8 @@ export default {
 			}
 
 			return result
-		}
+		},
+
 	},
 	methods: {
 		getLabels() {

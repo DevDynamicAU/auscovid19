@@ -5,11 +5,6 @@ const router = express.Router()
 
 const trimRequest = require('trim-request')
 
-router.get('/getLabels',
-	trimRequest.all,
-	dataController.getLabels
-)
-
 router.get('/getActiveCases',
 	trimRequest.all,
 	dataController.getActiveCases
@@ -38,5 +33,5 @@ router.get("/getNbrOfDeaths",
 router.get('/getData',
 	trimRequest.all,
 	dataController.getData)
-	
+
 module.exports = router
