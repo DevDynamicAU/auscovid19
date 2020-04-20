@@ -226,7 +226,7 @@ export default {
 			let apiURL = ""
 
 			if (typeof process.env.SERVER_URL == "undefined") {
-				apiURL = `${window.location.protocol}//${window.location.hostname}/data/getActiveCases`
+				apiURL = `${window.location.protocol}//${window.location.hostname}/data/getConfirmedCases`
 			} else {
 				apiURL = `${process.env.SERVER_URL}data/getActiveCases`
 			}

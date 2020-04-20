@@ -84,11 +84,26 @@ exports.getActiveCases = async (req, res) => {
 				dayCount = itm.Active
 			}
 
-			result.push({
-				ProviceState: itm.ProvinceState,
-				Date: itm.LastUpdate,
-				Active: dayCount
-			})
+			let recordCountry = typeof itm.Mainland != "undefined" ? itm.Mainland : itm.CountryRegion
+
+			switch (recordCountry) {
+				case "Australia":
+					result.push({
+						ProviceState: itm.ProvinceState,
+						Date: itm.LastUpdate,
+						Active: dayCount
+					})
+					break;
+
+				case "US":
+					result.push({
+						ProviceState: "US",
+						Date: itm.LastUpdate,
+						Active: runningTotal
+					})
+					break;
+			} 
+			
 		}
 
 		// if we need to insert missing data records for states on given days
@@ -302,4 +317,8 @@ exports.getNbrOfDeaths = async (req, res) => {
 	} catch (err) {
 		utils.handleError(res, err)
 	}
+}
+
+exports.getData = (req, res) => {
+	res.status(utils.HTTPResp.OK).json(data.returnData())
 }

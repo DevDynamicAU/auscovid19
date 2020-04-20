@@ -35,4 +35,8 @@ router.get("/getNbrOfDeaths",
 	dataController.getNbrOfDeaths
 )
 
+router.get('/getData',
+	trimRequest.all,
+	dataController.getData)
+	
 module.exports = router
