@@ -23,7 +23,7 @@
 			/>
 		</CSidebarBrand>
 
-		<CRenderFunction flat :content-to-render="$options.nav"/>
+		<CRenderFunction flat :content-to-render="$options.nav" :class="getClass"/>
 		<CSidebarMinimizer
 			class="d-md-down-none"
 			@click.native="$store.commit('set', ['sidebarMinimize', !minimize])"
@@ -43,6 +43,11 @@ export default {
 		},
 		minimize () {
 			return this.$store.state.sidebarMinimize 
+		},
+		getClass () {
+			console.log(nav, 'test')
+
+			return "from-func"
 		}
 	}
 }

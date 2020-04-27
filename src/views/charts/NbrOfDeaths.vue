@@ -31,14 +31,14 @@ export default {
 			const saColour = "gold"
 			const waColour = "black"
 
-			const QLD = this.chartData.filter( v => v.ProviceState == "Queensland").map( v => v.Deaths );
-			const NSW = this.chartData.filter( v => v.ProviceState == "New South Wales").map( v => v.Deaths );
-			const ACT = this.chartData.filter( v => v.ProviceState == "Australian Capital Territory").map( v => v.Deaths );
-			const VIC = this.chartData.filter( v => v.ProviceState == "Victoria").map( v => v.Deaths );
-			const TAS = this.chartData.filter( v => v.ProviceState == "Tasmania").map( v => v.Deaths );
-			const NT  = this.chartData.filter( v => v.ProviceState == "Northern Territory").map( v => v.Deaths );
-			const SA  = this.chartData.filter( v => v.ProviceState == "South Australia").map( v => v.Deaths );
-			const WA  = this.chartData.filter( v => v.ProviceState == "Western Australia").map( v => v.Deaths );
+			const QLD = this.chartData.filter( v => v.ProvinceState == "Queensland").map( v => v.Deaths );
+			const NSW = this.chartData.filter( v => v.ProvinceState == "New South Wales").map( v => v.Deaths );
+			const ACT = this.chartData.filter( v => v.ProvinceState == "Australian Capital Territory").map( v => v.Deaths );
+			const VIC = this.chartData.filter( v => v.ProvinceState == "Victoria").map( v => v.Deaths );
+			const TAS = this.chartData.filter( v => v.ProvinceState == "Tasmania").map( v => v.Deaths );
+			const NT  = this.chartData.filter( v => v.ProvinceState == "Northern Territory").map( v => v.Deaths );
+			const SA  = this.chartData.filter( v => v.ProvinceState == "South Australia").map( v => v.Deaths );
+			const WA  = this.chartData.filter( v => v.ProvinceState == "Western Australia").map( v => v.Deaths );
 
 			return [
 				{
@@ -109,7 +109,7 @@ export default {
 		},
 		chartLabels() {
 			// some black magic to remove the duplicate dates from the this.ChartData object - https://medium.com/dailyjs/how-to-remove-array-duplicates-in-es6-5daa8789641c
-			return [...new Set(this.chartData.map( v => v.Date)) ]
+			return [...new Set(this.chartData.map( v => v.LastUpdate)) ]
 		},
 		defaultOptions() {
 			return {

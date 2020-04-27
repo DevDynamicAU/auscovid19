@@ -5,13 +5,35 @@ const dateFNS = require('date-fns')
 
 const utils = require('../middleware/utils')
 
+const AusStates = ["Queensland", 'New South Wales', 'Australian Capital Territory', 'Victoria', 'Tasmania', 'Northern Territory', 'South Australia', 'Western Australia']
+const USStates = ["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa",
+				"Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire",
+				"New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota",
+				"Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"]
+
 exports.getActiveCases = async (req, res) => {
 	const _logger = logger.child({file: ModuleFile, method: "getActiveCases"})
+	const reqCountry = req.query.Country
+
 	let result = []
-	const AusStates = ["Queensland", 'New South Wales', 'Australian Capital Territory', 'Victoria', 'Tasmania', 'Northern Territory', 'South Australia', 'Western Australia']
+
+	let targetStates = [];
 	let missingStates = [];
 	let dummyRecord = {};
 	let caseData = [];
+	let summaryData = false;
+
+	switch (reqCountry.toLowerCase()) {
+		case "australia":
+			targetStates = AusStates
+			summaryData = false;
+		break;
+
+		case "us":
+			targetStates = USStates;
+			summaryData = true;
+		break;
+	}
 
 	let activeCount = 0;
 
@@ -26,90 +48,89 @@ exports.getActiveCases = async (req, res) => {
 			caseData = data.filterByState(state)
 		} else {
 			_logger.debug('returning all data')
-			caseData = data.returnData()
-			forceStateData = true
+			caseData = data.returnData(req.query.Country, summaryData)
+			forceStateData = reqCountry.toLowerCase() == "australia" ? true : false
 		}
-
+		
 		let dayCount = 0
 
-		for(let itm of caseData ) {
-			if (typeof itm.Active == "undefined") {
-				activeCount = Number(itm.Confirmed)
-				dayCount = activeCount
-			} else {
-				dayCount = itm.Active == "" ? 0 : Number(itm.Active)
-			}
+		// for(let itm of caseData ) {
+		// 	if (typeof itm.Active == "undefined") {
+		// 		activeCount = Number(itm.Confirmed)
+		// 		dayCount = activeCount
+		// 	} else {
+		// 		dayCount = itm.Active == "" ? 0 : Number(itm.Active)
+		// 	}
 
-			let recordCountry = typeof itm.Mainland != "undefined" ? itm.Mainland : itm.CountryRegion
+		// 	let recordCountry = typeof itm.Mainland != "undefined" ? itm.Mainland : itm.CountryRegion
 
-			switch (recordCountry) {
-				case "Australia":
-					result.push({
-						ProviceState: itm.ProvinceState,
-						Date: itm.LastUpdate,
-						Active: dayCount
-					})
-					break;
+		// 	switch (recordCountry) {
+		// 		case "Australia":
+		// 			result.push({
+		// 				ProviceState: itm.ProvinceState,
+		// 				Date: itm.LastUpdate,
+		// 				Active: dayCount
+		// 			})
+		// 			break;
 
-				case "US":
-					result.push({
-						ProviceState: "US",
-						Date: itm.LastUpdate,
-						Active: runningTotal
-					})
-					break;
-			} 
+		// 		case "US":
+		// 			result.push({
+		// 				ProviceState: "US",
+		// 				Date: itm.LastUpdate,
+		// 				Active: runningTotal
+		// 			})
+		// 			break;
+		// 	} 
 			
-		}
+		// }
 
 		// if we need to insert missing data records for states on given days
 		if (forceStateData) {
-			for (let itm of result) {
+			for (let itm of caseData) {
 
-				let dateRecords = result.filter(v => v.Date == itm.Date)
-				//console.log(dateRecords, `itmDate`)
-				//console.log(dateRecords.map(v => v.ProviceState)) //.filter(v => !AusStates.includes(v)), `missing states ${itmDate}`)
-				missingStates = AusStates.filter(v => !dateRecords.map(v => v.ProviceState).includes(v) )
+				let dateRecords = caseData.filter(v => v.LastUpdate == itm.LastUpdate)
+				missingStates = targetStates.filter(v => !dateRecords.map(v => v.ProvinceState).includes(v) )
 
 				for(let missingState of missingStates) {
-					//console.log(`inserting record for ${missingState} : ${itm.Date}`)
 					dummyRecord = {
-							ProviceState: missingState,
-							Date: itm.Date,
-							Active: 0,
-							AssumedData: true
+						City: '',
+						ProvinceState: missingState,
+						CountryRegion: itm.CountryRegion,
+						LastUpdate: itm.LastUpdate,
+						Confirmed: 0,
+						Deaths: 0,
+						Recovered: 0,
+						Active: 0,
+						AssumedData: true
 					}
 		
-					result.push(dummyRecord)
+					caseData.push(dummyRecord)
 				}
 			}
 		}
 
-		//const gg = result.filter(v => v.Date == '27-01-2020' ||  v.Date == '28-01-2020').sort((a, b) => { return a.Date > b.Date ? 1 : -1 })
-
-		//console.log(gg, 'filtered records')
-		result.sort((a, b) => {
-
-			// Convert the strings into date objects for comparisons
-			const aDate = dateFNS.parse(a.Date, 'dd-MM-yyyy', new Date())
-			const bDate = dateFNS.parse(b.Date, 'dd-MM-yyyy', new Date())
-			
-			// return if the date is > the next date
-			return aDate > bDate ? 1 : -1 })
+		const sortedData = utils.sortByDate(caseData)
 		
-		const lastDate = result[result.length - 1].Date
+		const lastDate = sortedData[sortedData.length - 1].LastUpdate
+		
+		let totalActive = -1
 		
 		// add a total number of active cases
-		const totalActive = result.filter(v => v.Date == lastDate).map(v => v.Active).reduce((a,b) => a + b, 0)
+		if (!summaryData) {
+			totalActive = sortedData.filter(v => v.LastUpdate == lastDate).map(v => v.Active).reduce((a,b) => a + b, 0)
+		} else {
+			// this is for countries like the use who use summary data.
+			totalActive = sortedData[sortedData.length - 1].Active
+		}
 		
 		dummyRecord = {
 			type: 'Total',
+			Field: 'Active',
 			count: totalActive
 		}
 
-		result.push(dummyRecord)
-		//console.log(gg, 'filtered records')
-		res.status(utils.HTTPResp.OK).json(result)
+		sortedData.push(dummyRecord)
+		res.status(utils.HTTPResp.OK).json(sortedData)
 	} catch (err) {
 		utils.handleError(res, err)
 	}
@@ -117,11 +138,27 @@ exports.getActiveCases = async (req, res) => {
 
 exports.getConfirmedCases = async (req, res) => {
 	const _logger = logger.child({file: ModuleFile, method: "getConfirmedCases"})
+	const reqCountry = req.query.Country
+
 	let result = []
-	const AusStates = ["Queensland", 'New South Wales', 'Australian Capital Territory', 'Victoria', 'Tasmania', 'Northern Territory', 'South Australia', 'Western Australia']
+
+	let targetStates = [];
 	let missingStates = [];
 	let dummyRecord = {};
 	let caseData = [];
+	let summaryData = false;
+
+	switch (reqCountry.toLowerCase()) {
+		case "australia":
+			targetStates = AusStates
+			summaryData = false;
+		break;
+
+		case "us":
+			targetStates = USStates;
+			summaryData = true;
+		break;
+	}
 
 	let activeCount = 0;
 
@@ -136,73 +173,90 @@ exports.getConfirmedCases = async (req, res) => {
 			caseData = data.filterByState(state)
 		} else {
 			_logger.debug('returning all data')
-			caseData = data.returnData()
-			forceStateData = true
+			caseData = data.returnData(req.query.Country, summaryData)
+			forceStateData = reqCountry.toLowerCase() == "australia" ? true : false
 		}
-
+		
 		let dayCount = 0
 
-		for(let itm of caseData ) {
-			if (typeof itm.Confirmed == "undefined") {
-				activeCount = 0
-				dayCount = activeCount
-			} else {
-				dayCount = itm.Confirmed == "" ? 0 : Number(itm.Confirmed)
-			}
+		// for(let itm of caseData ) {
+		// 	if (typeof itm.Active == "undefined") {
+		// 		activeCount = Number(itm.Confirmed)
+		// 		dayCount = activeCount
+		// 	} else {
+		// 		dayCount = itm.Active == "" ? 0 : Number(itm.Active)
+		// 	}
 
-			result.push({
-				ProviceState: itm.ProvinceState,
-				Date: itm.LastUpdate,
-				Confirmed: dayCount
-			})
-		}
+		// 	let recordCountry = typeof itm.Mainland != "undefined" ? itm.Mainland : itm.CountryRegion
+
+		// 	switch (recordCountry) {
+		// 		case "Australia":
+		// 			result.push({
+		// 				ProviceState: itm.ProvinceState,
+		// 				Date: itm.LastUpdate,
+		// 				Active: dayCount
+		// 			})
+		// 			break;
+
+		// 		case "US":
+		// 			result.push({
+		// 				ProviceState: "US",
+		// 				Date: itm.LastUpdate,
+		// 				Active: runningTotal
+		// 			})
+		// 			break;
+		// 	} 
+			
+		// }
 
 		// if we need to insert missing data records for states on given days
 		if (forceStateData) {
-			for (let itm of result) {
+			for (let itm of caseData) {
 
-				let dateRecords = result.filter(v => v.Date == itm.Date)
-				//console.log(dateRecords, `itmDate`)
-				//console.log(dateRecords.map(v => v.ProviceState)) //.filter(v => !AusStates.includes(v)), `missing states ${itmDate}`)
-				missingStates = AusStates.filter(v => !dateRecords.map(v => v.ProviceState).includes(v) )
+				let dateRecords = caseData.filter(v => v.LastUpdate == itm.LastUpdate)
+				missingStates = targetStates.filter(v => !dateRecords.map(v => v.ProvinceState).includes(v) )
 
 				for(let missingState of missingStates) {
-					//console.log(`inserting record for ${missingState} : ${itm.Date}`)
 					dummyRecord = {
-							ProviceState: missingState,
-							Date: itm.Date,
-							Confirmed: 0,
-							AssumedData: true
+						City: '',
+						ProvinceState: missingState,
+						CountryRegion: itm.CountryRegion,
+						LastUpdate: itm.LastUpdate,
+						Confirmed: 0,
+						Deaths: 0,
+						Recovered: 0,
+						Active: 0,
+						AssumedData: true
 					}
 		
-					result.push(dummyRecord)
+					caseData.push(dummyRecord)
 				}
 			}
 		}
 
-		result = result.sort((a, b) => {
-			// Convert the strings into date objects for comparisons
-			const aDate = dateFNS.parse(a.Date, 'dd-MM-yyyy', new Date())
-			const bDate = dateFNS.parse(b.Date, 'dd-MM-yyyy', new Date())
-			
-			// return if the date is > the next date
-			return aDate > bDate ? 1 : -1 
-		})
-
-		//console.log(gg, 'filtered records')
-		const lastDate = result[result.length - 1].Date
-
-		// add a total number of deaths
-		const totalConfirmed = result.filter(v => v.Date == lastDate).map(v => v.Confirmed).reduce((a,b) => a + b, 0)
+		const sortedData = utils.sortByDate(caseData)
+		
+		const lastDate = sortedData[sortedData.length - 1].LastUpdate
+		
+		let totalConfirmed = -1
+		
+		// add a total number of active cases
+		if (!summaryData) {
+			totalConfirmed = sortedData.filter(v => v.LastUpdate == lastDate).map(v => v.Confirmed).reduce((a,b) => a + b, 0)
+		} else {
+			// this is for countries like the use who use summary data.
+			totalConfirmed = sortedData[sortedData.length - 1].Confirmed
+		}
 		
 		dummyRecord = {
 			type: 'Total',
+			Field: 'Confirmed',
 			count: totalConfirmed
 		}
 
-		result.push(dummyRecord)
-		//console.log(gg, 'filtered records')
-		res.status(utils.HTTPResp.OK).json(result)
+		sortedData.push(dummyRecord)
+		
+		res.status(utils.HTTPResp.OK).json(sortedData)
 	} catch (err) {
 		utils.handleError(res, err)
 	}
@@ -210,11 +264,27 @@ exports.getConfirmedCases = async (req, res) => {
 
 exports.getNbrOfDeaths = async (req, res) => {
 	const _logger = logger.child({file: ModuleFile, method: "getNbrOfDeaths"})
+	const reqCountry = req.query.Country
+
 	let result = []
-	const AusStates = ["Queensland", 'New South Wales', 'Australian Capital Territory', 'Victoria', 'Tasmania', 'Northern Territory', 'South Australia', 'Western Australia']
+	
+	let targetStates = [];
 	let missingStates = [];
 	let dummyRecord = {};
 	let caseData = [];
+	let summaryData = false;
+
+	switch (reqCountry.toLowerCase()) {
+		case "australia":
+			targetStates = AusStates
+			summaryData = false;
+		break;
+
+		case "us":
+			targetStates = USStates;
+			summaryData = true;
+		break;
+	}
 
 	let activeCount = 0;
 
@@ -229,78 +299,187 @@ exports.getNbrOfDeaths = async (req, res) => {
 			caseData = data.filterByState(state)
 		} else {
 			_logger.debug('returning all data')
-			caseData = data.returnData()
-			forceStateData = true
+			caseData = data.returnData(req.query.Country, summaryData)
+			forceStateData = reqCountry.toLowerCase() == "australia" ? true : false
 		}
-
+		
 		let dayCount = 0
 
-		for(let itm of caseData ) {
-			if (typeof itm.Deaths == "undefined") {
-				activeCount = -1
-				dayCount = activeCount
-			} else {
-				dayCount = itm.Deaths == "" ? 0 : Number(itm.Deaths)
-			}
+		// for(let itm of caseData ) {
+		// 	if (typeof itm.Active == "undefined") {
+		// 		activeCount = Number(itm.Confirmed)
+		// 		dayCount = activeCount
+		// 	} else {
+		// 		dayCount = itm.Active == "" ? 0 : Number(itm.Active)
+		// 	}
 
-			result.push({
-				ProviceState: itm.ProvinceState,
-				Date: itm.LastUpdate,
-				Deaths: dayCount
-			})
-		}
+		// 	let recordCountry = typeof itm.Mainland != "undefined" ? itm.Mainland : itm.CountryRegion
+
+		// 	switch (recordCountry) {
+		// 		case "Australia":
+		// 			result.push({
+		// 				ProviceState: itm.ProvinceState,
+		// 				Date: itm.LastUpdate,
+		// 				Active: dayCount
+		// 			})
+		// 			break;
+
+		// 		case "US":
+		// 			result.push({
+		// 				ProviceState: "US",
+		// 				Date: itm.LastUpdate,
+		// 				Active: runningTotal
+		// 			})
+		// 			break;
+		// 	} 
+			
+		// }
 
 		// if we need to insert missing data records for states on given days
 		if (forceStateData) {
-			for (let itm of result) {
+			for (let itm of caseData) {
 
-				let dateRecords = result.filter(v => v.Date == itm.Date)
-				//console.log(dateRecords, `itmDate`)
-				//console.log(dateRecords.map(v => v.ProviceState)) //.filter(v => !AusStates.includes(v)), `missing states ${itmDate}`)
-				missingStates = AusStates.filter(v => !dateRecords.map(v => v.ProviceState).includes(v) )
+				let dateRecords = caseData.filter(v => v.LastUpdate == itm.LastUpdate)
+				missingStates = targetStates.filter(v => !dateRecords.map(v => v.ProvinceState).includes(v) )
 
 				for(let missingState of missingStates) {
-					//console.log(`inserting record for ${missingState} : ${itm.Date}`)
 					dummyRecord = {
-							ProviceState: missingState,
-							Date: itm.Date,
-							Deaths: 0,
-							AssumedData: true
+						City: '',
+						ProvinceState: missingState,
+						CountryRegion: itm.CountryRegion,
+						LastUpdate: itm.LastUpdate,
+						Confirmed: 0,
+						Deaths: 0,
+						Recovered: 0,
+						Active: 0,
+						AssumedData: true
 					}
 		
-					result.push(dummyRecord)
+					caseData.push(dummyRecord)
 				}
 			}
 		}
 
-		//result.push(dummyRecord)
-		result = result.sort((a, b) => {
-			// Convert the strings into date objects for comparisons
-			const aDate = dateFNS.parse(a.Date, 'dd-MM-yyyy', new Date())
-			const bDate = dateFNS.parse(b.Date, 'dd-MM-yyyy', new Date())
-			
-			// return if the date is > the next date
-			return aDate > bDate ? 1 : -1 
-		})
-
-		const lastDate = result[result.length - 1].Date
-
-		// add a total number of deaths
-		const totalDeaths = result.filter(v => v.Date == lastDate).map(v => v.Deaths).reduce((a,b) => a + b, 0)
+		
+		const sortedData = utils.sortByDate(caseData)
+		
+		const lastDate = sortedData[sortedData.length - 1].LastUpdate
+		
+		let totalDeaths = -1
+		
+		// add a total number of active cases
+		if (!summaryData) {
+			totalDeaths = sortedData.filter(v => v.LastUpdate == lastDate).map(v => v.Deaths).reduce((a,b) => a + b, 0)
+		} else {
+			// this is for countries like the use who use summary data.
+			totalDeaths = sortedData[sortedData.length - 1].Active
+		}
 		
 		dummyRecord = {
 			type: 'Total',
+			Field: 'Deaths',
 			count: totalDeaths
 		}
 
-		result.push(dummyRecord)
-		//console.log(gg, 'filtered records')
-		res.status(utils.HTTPResp.OK).json(result)
+		sortedData.push(dummyRecord)
+		res.status(utils.HTTPResp.OK).json(sortedData)
 	} catch (err) {
 		utils.handleError(res, err)
 	}
 }
 
-exports.getData = (req, res) => {
-	res.status(utils.HTTPResp.OK).json(data.returnData())
+exports.getData = async (req, res) => {
+	const _logger = logger.child({file: ModuleFile, method: "getData"})
+	const reqCountry = req.query.Country
+
+	let result = []
+
+	let targetStates = [];
+	let missingStates = [];
+	let dummyRecord = {};
+	let caseData = [];
+	let summaryData = false;
+
+	switch (reqCountry.toLowerCase()) {
+		case "australia":
+			targetStates = AusStates
+			summaryData = false;
+		break;
+
+		case "us":
+			targetStates = USStates;
+			summaryData = true;
+		break;
+	}
+
+	let activeCount = 0;
+
+	_logger.debug('Starting method')
+
+	try {
+		const state = typeof req.params.id == "undefined" ? "" : req.params.id
+		let forceStateData = false;
+
+		if (state != "") {
+			_logger.debug('Filtering data')
+			caseData = data.filterByState(state)
+		} else {
+			_logger.debug('returning all data')
+			caseData = data.returnData(req.query.Country, summaryData)
+			forceStateData = reqCountry.toLowerCase() == "australia" ? true : false
+		}
+		
+		let dayCount = 0
+
+		// if we need to insert missing data records for states on given days
+		if (forceStateData) {
+			for (let itm of caseData) {
+
+				let dateRecords = caseData.filter(v => v.LastUpdate == itm.LastUpdate)
+				missingStates = targetStates.filter(v => !dateRecords.map(v => v.ProvinceState).includes(v) )
+
+				for(let missingState of missingStates) {
+					dummyRecord = {
+						City: '',
+						ProvinceState: missingState,
+						CountryRegion: itm.CountryRegion,
+						LastUpdate: itm.LastUpdate,
+						Confirmed: 0,
+						Deaths: 0,
+						Recovered: 0,
+						Active: 0,
+						AssumedData: true
+					}
+		
+					caseData.push(dummyRecord)
+				}
+			}
+		}
+
+		const sortedData = utils.sortByDate(caseData)
+		
+		const lastDate = sortedData[sortedData.length - 1].LastUpdate
+		
+		let totalRecovered = -1
+		
+		// add a total number of active cases
+		if (!summaryData) {
+			totalRecovered = sortedData.filter(v => v.LastUpdate == lastDate).map(v => v.Recovered).reduce((a,b) => a + b, 0)
+		} else {
+			// this is for countries like the use who use summary data.
+			totalRecovered = sortedData[sortedData.length - 1].Recovered
+		}
+		
+		dummyRecord = {
+			type: 'Total',
+			Field: 'Recovered',
+			count: totalRecovered
+		}
+
+		sortedData.push(dummyRecord)
+		
+		res.status(utils.HTTPResp.OK).json(sortedData)
+	} catch (err) {
+		utils.handleError(res, err)
+	}
 }

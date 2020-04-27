@@ -25,6 +25,7 @@ import {
 } from '@coreui/icons'
 import {
   cifUs,
+  cifAu,
   cifBr,
   cifIn,
   cifFr,
@@ -132,7 +133,8 @@ export const iconsSet = Object.assign(
     cilXCircle
   },
   {
-    cifUs,
+	cifUs,
+	cifAu,
     cifBr,
     cifIn,
     cifFr,

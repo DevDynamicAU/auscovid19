@@ -5,7 +5,8 @@ import Router from 'vue-router'
 const TheContainer = () => import('@/containers/TheContainer')
 
 // Views
-const Dashboard = () => import('@/views/Dashboard')
+const Australia = () => import('@/views/Australia')
+const USA = () => import('@/views/USA')
 
 Vue.use(Router)
 
@@ -19,15 +20,22 @@ export default new Router({
 })
 
 function configRoutes() {
-	return [{
+	return [
+		{
 			path: '/',
-			redirect: '/dashboard',
+			redirect: '/australia',
 			name: 'Home',
 			component: TheContainer,
-			children: [{
-					path: 'dashboard',
-					name: 'Dashboard',
-					component: Dashboard
+			children: [
+				{
+					path: 'Australia',
+					name: 'Australia',
+					component: Australia
+				},
+				{
+					path: 'USA',
+					name: 'USA',
+					component: USA
 				}
 			]
 		}

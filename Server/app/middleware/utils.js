@@ -69,6 +69,10 @@ exports.getPhrase = (arr, basePhrase) => {
 exports.handleError = (res, err) => {
 	const _logger = logger.child({file: ModuleFile, method: 'handleError' })
 
+	if (typeof err.code == "undefined") {
+		err.code = HTTPResp.InternalServerError
+	}
+
 	// Prints error in console
 	if (process.env.NODE_ENV === 'development') {
 		// log the whole object to the console. this is so we can see what it is without the logger messing it up
@@ -125,6 +129,29 @@ exports.formatFileDate = fileName => {
 	let dateParts = fileName.split('-')
 
 	return `${dateParts[1]}-${dateParts[0]}-${dateParts[2]}`
+}
+
+exports.sortByDate = (arrData) => {
+	return arrData.sort((a, b) => { 
+		// Convert the strings into date objects for comparisons
+		const aDate = dateFNS.parse(a.LastUpdate, 'dd-MM-yyyy', new Date())
+		const bDate = dateFNS.parse(b.LastUpdate, 'dd-MM-yyyy', new Date())
+		
+		// return if the date is > the next date
+		return aDate > bDate ? 1 : -1 
+	})
+}
+
+exports.getPropertyTotal = (arrData, propertyName) => {
+	const result = arrData.reduce((total, b) => {
+		//const _a = Number(a)
+		const _b = !Number.isNaN(Number(b[propertyName])) ? Number(b[propertyName]) : 0 
+		
+		//console.log(total, _b, propertyName, 'ff')
+		return total + _b
+	}, 0)
+
+	return result
 }
 
 // Export the object so it can be used in other modules

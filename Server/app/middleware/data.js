@@ -12,7 +12,9 @@ let data = {};
 let csvData = [];
 let targetFiles = [];
 let createPromise = null;
-const allowedCountries = ["Australia"]
+let fileDate = "";
+
+const allowedCountries = ["Australia", "US"]
 
 const loadData = async () => {
 	const _logger = logger.child({file : ModuleFile, method: "loadData"})
@@ -47,16 +49,6 @@ const loadData = async () => {
 		speed: "N/A"
 	})
 
-	let prevDate = ""
-	let totalConfirmed = 0
-	let totalDeaths = 0
-	let totalActive = 0
-	
-	let fileDate = ""
-	const td = "13-03-2020"
-	const nd = "14-03-2020"
-	let existingData = []
-
 	for(let file of targetFiles) {
 		pb.increment();
 		let dataFile = path.join(process.env.DATA_DIR, file)
@@ -67,7 +59,10 @@ const loadData = async () => {
 							}))
 
 			.on('data', function(csvRow) {
-				
+				let activeCases = 0
+				let confirmedCases = 0
+				let nbrOfDeaths = 0
+
 				// do something with csvRow
 				if ( allowedCountries.indexOf(csvRow.CountryRegion) >= 0) {
 
@@ -76,126 +71,33 @@ const loadData = async () => {
 						
 						fileDate = utils.formatFileDate(path.basename(file, '.csv'))
 
-						if (fileDate == td) {
-							//console.log(`processing ${ utils.formatFileDate(path.basename(file, '.csv'))}`, csvRow)
+						confirmedCases = !Number.isNaN(Number(csvRow.Confirmed)) ? Number(csvRow.Confirmed) : 0
+						nbrOfDeaths = !Number.isNaN(Number(csvRow.Deaths)) ? Number(csvRow.Deaths) : 0
+						nbrRecovered = !Number.isNaN(Number(csvRow.Recovered)) ? Number(csvRow.Recovered) : 0
+
+						if (csvRow.Active) {
+							activeCases = Number(csvRow.Active)
+						} else {
+							if (csvRow.Confirmed) {
+								//console.log('getting active from confirmed cases')
+								activeCases = confirmedCases - nbrOfDeaths - nbrRecovered
+							}
 						}
 
 						// Fix the last update column to be the date of the file
-						csvRow.LastUpdate = fileDate
-
-						if (csvRow.CountryRegion == "Australia") {
-							csvData.push(csvRow);
-						} else {
-
-							// If the prevDate has not yet been set, set it to the current file date
-							existingData = csvData.filter(v => v.LastUpdate == csvRow.LastUpdate)
-							
-							if (existingData.length > 0) {
-								// we have some data, so we will increment it
-								existingData.filter((v, i) => {
-									if (v.LastUpdate == csvRow.LastUpdate) {
-											existingData[i].noData = false
-											existingData[i].Confirmed += !Number.isNaN(csvRow.Confirmed) ? Number(csvRow.Confirmed) : 0
-											existingData[i].Deaths += !Number.isNaN(csvRow.Deaths) ? Number(csvRow.Deaths) : 0
-
-											// Check we have data for active Cases. If we don't then we will set it to 0
-											if (!Number.isNaN(Number(csvRow.Active))) {
-												activeCases = Number(csvRow.Active)
-											} else {
-												activeCases = 0
-											}
-
-											// if active cases are 0, then we need to assume that all confirmed cases are active
-											if (activeCases == 0) {
-												existingData[i].Active = existingData[i].Confirmed // don't need number here because it is assigned above as a number
-												existingData[i].AssumedActive = true
-
-											} else {
-												if (activeCases > 0) {
-													existingData[i].Active += activeCases
-													existingData[i].AssumedActive = false
-												}
-											}
-
-											
-											existingData[i].Incremented = true
-									}
-								})
-							} else {
-								// we have no data, so we need to push the record in
-								if (fileDate == td) console.log(`pushing in data for ${csvRow.LastUpdate}`)
-								
-								// Check we have data for active Cases. If we don't then we will set it to 0
-								if (!Number.isNaN(Number(csvRow.Active))) {
-									activeCases = Number(csvRow.Active)
-								} else {
-									activeCases = 0
-								}
-
-								// if active cases are 0, then we need to assume that all confirmed cases are active
-								if (activeCases == 0) {
-									activeCases = !Number.isNaN(csvRow.Confirmed) ? Number(csvRow.Confirmed) : 0
-								}
-
-								let dummyRecord = {
-									ProvinceState: "US",
-									LastUpdate: csvRow.LastUpdate,
-									noData: true,
-									AssumedActive: true,
-									Confirmed: !Number.isNaN(csvRow.Confirmed) ? Number(csvRow.Confirmed) : 0,
-									Deaths: !Number.isNaN(csvRow.Deaths) ? Number(csvRow.Deaths) : 0,
-									Active: activeCases
-								}
-
-								csvData.push(dummyRecord)
-
-								//if (fileDate == td) console.log(csvData.filter(v => v.LastUpdate == csvRow.LastUpdate))
-							}
-
-							// if we have moved onto the next file
-							// 1. Update the prevDate field to the new date
-							// 2. Put in the summary data to our dataset
-							// 3. reset the totals
-
-							// if (prevDate != csvRow.LastUpdate) {
-							// 	totalConfirmed += Number(typeof csvRow.Confirmed == "undefined" ? 0 : csvRow.Confirmed)
-							// 	totalDeaths += Number(typeof csvRow.Deaths == "undefined" ? 0 : csvRow.Deaths)
-							// 	totalActive += Number(typeof csvRow.Active == "undefined" ? 0 : csvRow.Active)
-
-							// 		let dummyRecord = {
-							// 			ProvinceState: "US",
-							// 			LastUpdate: prevDate,
-							// 			Confirmed: totalConfirmed,
-							// 			Deaths: totalDeaths,
-							// 			Active: totalActive
-							// 		}
-	
-							// 		if (utils.formatFileDate(path.basename(file, '.csv')) == nd) {
-							// 			// console.log(`before reset ${csvRow.Confirmed} : ${csvRow.Deaths} : ${csvRow.Active}`)
-							// 			// console.log(`${prevDate} : ${csvRow.LastUpdate} - resetting`)
-							// 			// console.log(`${totalConfirmed} : ${totalDeaths} : ${totalActive} - totals`)
-							// 			// console.log(dummyRecord)
-							// 		} 
-									
-							// 		csvData.push(dummyRecord)
-					
-							// 		prevDate = csvRow.LastUpdate
-									
-							// 		totalConfirmed = 0
-							// 		totalDeaths = 0
-							// 		totalActive = 0
-							// 	//}
-
-								
-							// } else {
-								
-							// 	totalConfirmed += Number(typeof csvRow.Confirmed == "undefined" ? 0 : csvRow.Confirmed)
-							// 	totalDeaths += Number(typeof csvRow.Deaths == "undefined" ? 0 : csvRow.Deaths)
-							// 	totalActive += Number(typeof csvRow.Active == "undefined" ? 0 : csvRow.Active)
-
-							// 	//if (utils.formatFileDate(path.basename(file, '.csv')) == td) console.log(`incrementing C| ${totalConfirmed} : D| ${totalDeaths} : A| ${totalActive}`)
-							// }
+						let data = {
+							City: typeof csvRow.Admin2 == "undefined" ? '' : csvRow.Admin2,
+							ProvinceState: csvRow.ProvinceState,
+							CountryRegion: csvRow.CountryRegion,
+							LastUpdate: fileDate,
+							Confirmed: confirmedCases,
+							Deaths: nbrOfDeaths,
+							Recovered: nbrRecovered,
+							Active: activeCases
 						}
+						
+						//csvData.push(csvRow);
+						csvData.push(data);
 					}
 				} else {
 					//console.log(`${allowedCountries.indexOf(csvRow.CountryRegion)} : ${csvRow.CountryRegion}`)
@@ -204,11 +106,12 @@ const loadData = async () => {
 			})
 			.on("end", (s) => {
 				//console.log(existingData.filter(v => v.LastUpdate == "13-03-2020"), 'this is the end')
-
+				//console.log('done!')
 			})
 	}
 
 	pb.stop();
+	console.log('reading files - done')
 }
 
 data.load = async () => {
@@ -222,16 +125,57 @@ data.load = async () => {
 	return createPromise
 }
 
-data.returnData = () => {
-	return csvData.sort((a, b) => { 
+data.returnData = (reqCountry, summaryByCountry = false) => {
+	let countryFilter = reqCountry == "" ? "Australia" : reqCountry
+	const availDates = [...new Set(csvData.filter(v => v.CountryRegion == countryFilter).map(v => v.LastUpdate))]
+	let summarizedArray = []
+	let dayData = []
 
-		// Convert the strings into date objects for comparisons
-		const aDate = dateFNS.parse(a.Date, 'dd-MM-yyyy', new Date())
-		const bDate = dateFNS.parse(b.Date, 'dd-MM-yyyy', new Date())
-		
-		// return if the date is > the next date
-		return aDate > bDate ? -1 : 1 })
+	console.log(`filtering by ${countryFilter}`)
+
+	if (!summaryByCountry) {
+		console.log('not summarizing by country')
+		const sortedData = utils.sortByDate(csvData.filter(v => v.CountryRegion == countryFilter ))
+
+		return sortedData
+
+	} else {
+			// 1. Loop the date's in csvData
+			// 2. for each date, sum the data
+			for (const updateDate of availDates) {
+				//console.log(updateDate, 'update date')
+				dayData = csvData.filter((v) => {
+					return v.CountryRegion == countryFilter && v.LastUpdate == updateDate
+				})
+				
+				// summarise the data records for the day
+				let totalConfirmed = utils.getPropertyTotal(dayData, 'Confirmed')
+				let totalDeaths = utils.getPropertyTotal(dayData, 'Deaths')
+				let totalRecovered = utils.getPropertyTotal(dayData, 'Recovered')
+				let totalActive = utils.getPropertyTotal(dayData, 'Active')
+				
+				// if active cases are 0, then we need to assume that all confirmed cases are active
+				if (totalActive == 0) {
+					totalActive = totalConfirmed
+				}
+				
+				let summarizedData = {
+					CountryRegion: countryFilter,
+					LastUpdate: updateDate,
+					Confirmed: totalConfirmed,
+					Deaths: totalDeaths,
+					Recovered: totalRecovered,
+					Active: totalActive
+				}
+
+				summarizedArray.push(summarizedData)
+			}
+
+			// 3. return the summarized data
+			return utils.sortByDate(summarizedArray)
+	}
 }
+	
 
 data.filterByState = (state) => {
 	return csvData.filter(v => v.ProvinceState == state)
