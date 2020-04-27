@@ -72,6 +72,7 @@
 				<ConfirmedChart 
 					style="height:300px; margin-top:40px;"
 					:chartData="ConfirmedCases"
+					:countries="chartCountries"
 					:lineWidth=3 />
 			</CCardBody>
 			<CCardFooter>
@@ -116,6 +117,7 @@
 				<NbrOfDeathsChart 
 					style="height:500px; margin-top:40px;"
 					:chartData="NbrOfDeaths"
+					:countries="chartCountries"
 					:lineWidth=3 />
 			</CCardBody>
 			<CCardFooter>
@@ -160,6 +162,7 @@
 				<NbrRecoveredChart 
 					style="height:500px; margin-top:40px;"
 					:chartData="NbrRecovered"
+					:countries="chartCountries"
 					:lineWidth=3 />
 			</CCardBody>
 			<CCardFooter>

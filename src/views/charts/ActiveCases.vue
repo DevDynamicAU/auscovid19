@@ -63,10 +63,11 @@ export default {
 					break;
 				
 					default:
-						const countryColour = this.validCountries.filter(v => v.country == this.country).colour
-						const countryData = this.chartData.filter( v => v.CountryRegion == this.country).map( v => v.Active );
 
-						dataSets.push({ label: this.country, backgroundColor: "transparent", borderColor: countryColour, pointHoverBackgroundColor: countryColour,borderWidth: this.lineWidth, data: countryData })
+						const countryColour = this.validCountries.filter(v => v.country == country)[0].colour
+						const countryData = this.chartData.filter( v => v.CountryRegion == country).map( v => v.Active );
+
+						dataSets.push({ label: country, backgroundColor: "transparent", borderColor: countryColour, pointHoverBackgroundColor: countryColour,borderWidth: this.lineWidth, data: countryData })
 					break;
 				}
 			}

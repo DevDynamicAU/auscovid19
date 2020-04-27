@@ -8,13 +8,13 @@ export default [{
 			icon: 'cifAu',
 			badge: {}
 		},
-		// {
-		// 	_name: 'CSidebarNavItem',
-		// 	name: 'USA',
-		// 	to: '/USA',
-		// 	icon: 'cifUs',
-		// 	className: 'something-here',
-		// 	badge: {}
-		// },
+		{
+			_name: 'CSidebarNavItem',
+			name: 'USA (Beta)',
+			to: '/USA',
+			icon: 'cifUs',
+			className: 'something-here',
+			badge: {}
+		},
 	]
 }]
