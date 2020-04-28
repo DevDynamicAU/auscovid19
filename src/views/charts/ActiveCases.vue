@@ -25,7 +25,7 @@ export default {
 	computed: {
 		defaultDatasets() {
 			let dataSets = []
-			console.log(this.countries, 'countries')
+
 			for (const country of this.countries) {
 
 				if (this.mainCountry.toLowerCase() == "australia") {
@@ -47,7 +47,6 @@ export default {
 						const SA  = this.chartData.filter( v => v.ProvinceState == "South Australia").map( v => v.Active );
 						const WA  = this.chartData.filter( v => v.ProvinceState == "Western Australia").map( v => v.Active );
 
-						console.log(QLD, 'qld data')
 						dataSets.push({ label: "QLD", 
 										backgroundColor: "transparent", borderColor: qldColour, pointHoverBackgroundColor: qldColour, borderWidth: this.lineWidth, data: QLD })
 
@@ -74,9 +73,12 @@ export default {
 
 				} else {
 					const countryColour = this.validCountries.filter(v => v.country == country)[0].colour
+					
+					// Inserts data for the missing days when additional countries don't have the same data
+					//this.chartData = this.fixChartData(country)
 
 					if (this.chartData.filter( v=> v.Country == country).length > 0) {
-						const countryData = this.chartData.filter( v => v.Country == country)[0].Cases.map( v => v.Active );
+						const countryData = this.chartData.filter( v => v.Country == country)[0].Cases.filter( v => v.type != "Totals" ).map( v => v.Active );
 						
 						dataSets.push({ label: country,
 										backgroundColor: "transparent",
@@ -111,7 +113,8 @@ export default {
 				data = this.chartData.filter(v => v.Country == this.mainCountry)
 
 				if (data.length > 0) {
-					labels = data[0].Cases.map( v => v.LastUpdate)
+					//console.log(data[0].Cases.filter(v => v.type == "Totals"), 'cases')
+					labels = data[0].Cases.filter(v => v.type != "Totals").map( v => v.LastUpdate)
 				} else {
 					labels = []
 				}

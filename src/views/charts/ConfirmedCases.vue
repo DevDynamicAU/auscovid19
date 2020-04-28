@@ -24,7 +24,7 @@ export default {
 	computed: {
 		defaultDatasets() {
 			let dataSets = []
-			console.log(this.countries, 'countries')
+
 			for (const country of this.countries) {
 
 				if (this.mainCountry.toLowerCase() == "australia") {
@@ -109,7 +109,7 @@ export default {
 				data = this.chartData.filter(v => v.Country == this.mainCountry)
 
 				if (data.length > 0) {
-					labels = data[0].Cases.map( v => v.LastUpdate)
+					labels = data[0].Cases.filter(v => v.type != "Totals").map( v => v.LastUpdate)
 				} else {
 					labels = []
 				}
