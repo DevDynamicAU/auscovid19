@@ -46,7 +46,7 @@ app.use(
 )
 
 // load the data on startup into memory
-require('./app/middleware/data').load()
+require('./app/middleware/data.middleware').load()
 
 // Init all other stuff
 app.use(cors(corsOptions))

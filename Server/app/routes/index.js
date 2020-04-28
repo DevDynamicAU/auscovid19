@@ -16,7 +16,7 @@ const _logger = logger.child({file : ModuleName, method: "Main"})
 fs.readdirSync(routesPath).filter(file => {
 	// Take filename and remove last part (extension)
 	const routeFile = removeExtensionFromFile(file)
-	const routePath = routeFile.replace('.route', '')
+	const routePath = routeFile.replace(/.route(s)?/g, '')
 	_logger.debug(`Loading route /${routePath} from ./${routeFile}`)
 
 	// Prevents loading of this file and auth file

@@ -6,7 +6,7 @@
 		@update:show="(value) => $store.commit('set', ['sidebarShow', value])"
 	>
 		<CSidebarBrand class="d-md-down-none" to="/">
-			<h3>CORVID-19</h3>
+			<h3>COVID-19</h3>
 			<CIcon 
 				class="c-sidebar-brand-full d-none"
 				name="logo"

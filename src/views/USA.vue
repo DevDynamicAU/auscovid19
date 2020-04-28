@@ -27,6 +27,7 @@
 				<ActiveChart 
 					style="height:500px; margin-top:40px;"
 					:chartData="ActiveCases"
+					:mainCountry="Country"
 					:countries="chartCountries"
 					:lineWidth=3 />
 			</CCardBody>
@@ -72,6 +73,7 @@
 				<ConfirmedChart 
 					style="height:300px; margin-top:40px;"
 					:chartData="ConfirmedCases"
+					:mainCountry="Country"
 					:countries="chartCountries"
 					:lineWidth=3 />
 			</CCardBody>
@@ -117,6 +119,7 @@
 				<NbrOfDeathsChart 
 					style="height:500px; margin-top:40px;"
 					:chartData="NbrOfDeaths"
+					:mainCountry="Country"
 					:countries="chartCountries"
 					:lineWidth=3 />
 			</CCardBody>
@@ -162,6 +165,7 @@
 				<NbrRecoveredChart 
 					style="height:500px; margin-top:40px;"
 					:chartData="NbrRecovered"
+					:mainCountry="Country"
 					:countries="chartCountries"
 					:lineWidth=3 />
 			</CCardBody>
@@ -220,13 +224,13 @@ export default {
 	},
 	computed: {
 		chartCountries: function () {
-			return [this.Country]
+			return [this.Country, "Australia"]
 		},
 		totalActive: function () {
 			let result = -1
 
 			if (this.ActiveCases.length > 0) {
-				result = this.ActiveCases.filter(v => v.type == "Total")[0].count 
+				result = this.ActiveCases.filter(v => v.Country == this.Country )[0].Cases.filter(v => v.type == "Totals")[0].Active
 			}
 
 			return {
@@ -238,7 +242,7 @@ export default {
 			let result = -1
 
 			if (this.ConfirmedCases.length > 0) {
-				result = this.ConfirmedCases.filter(v => v.type == "Total")[0].count 
+				result = this.ActiveCases.filter(v => v.Country == this.Country )[0].Cases.filter(v => v.type == "Totals")[0].Confirmed
 			}
 
 			return result
@@ -247,7 +251,7 @@ export default {
 			let result = -1
 
 			if (this.NbrOfDeaths.length > 0) {
-				result = this.NbrOfDeaths.filter(v => v.type == "Total")[0].count 
+				result = this.ActiveCases.filter(v => v.Country == this.Country )[0].Cases.filter(v => v.type == "Totals")[0].Deaths
 			}
 
 			return result
@@ -256,7 +260,7 @@ export default {
 			let result = -1
 
 			if (this.NbrRecovered.length > 0) {
-				result = this.NbrRecovered.filter(v => v.type == "Total")[0].count 
+				result = this.ActiveCases.filter(v => v.Country == this.Country )[0].Cases.filter(v => v.type == "Totals")[0].Recovered
 			}
 
 			return {
@@ -269,55 +273,79 @@ export default {
 	methods: {
 		getActiveCases() {
 			let apiURL = ""
+			let result = []
 
-			if (typeof process.env.SERVER_URL == "undefined") {
-				apiURL = `${window.location.protocol}//${window.location.hostname}/data/getActiveCases?Country=${this.Country}`
-			} else {
-				apiURL = `${process.env.SERVER_URL}data/getActiveCases?Country=${this.Country}`
+			for (const country of this.chartCountries) {
+				if (typeof process.env.SERVER_URL == "undefined") {
+					apiURL = `${window.location.protocol}//${window.location.hostname}/data/getData?Country=${country}&GroupByCountry=true`
+				} else {
+					apiURL = `${process.env.SERVER_URL}data/getData?Country=${country}`
+				}
+
+				axios.get(apiURL).then((resp) => {
+					this.ActiveCases.push({
+						Country: country,
+						Cases: resp.data
+					})
+				})
 			}
-
-			axios.get(apiURL).then((resp) => {
-				this.ActiveCases = resp.data
-			})
 		},
 		getConfirmedCases() {
 			let apiURL = ""
+			let result = []
 
-			if (typeof process.env.SERVER_URL == "undefined") {
-				apiURL = `${window.location.protocol}//${window.location.hostname}/data/getConfirmedCases?Country=${this.Country}`
-			} else {
-				apiURL = `${process.env.SERVER_URL}data/getActiveCases?Country=${this.Country}`
+			for (const country of this.chartCountries) {
+				if (typeof process.env.SERVER_URL == "undefined") {
+					apiURL = `${window.location.protocol}//${window.location.hostname}/data/getData?Country=${country}&GroupByCountry=true`
+				} else {
+					apiURL = `${process.env.SERVER_URL}data/getData?Country=${country}`
+				}
+
+				axios.get(apiURL).then((resp) => {
+					this.ConfirmedCases.push({
+						Country: country,
+						Cases: resp.data
+					})
+				})
 			}
-
-			axios.get(apiURL).then((resp) => {
-				this.ConfirmedCases = resp.data
-			})
 		},
 		getNbrOfDeaths() {
 			let apiURL = ""
+			let result = []
 
-			if (typeof process.env.SERVER_URL == "undefined") {
-				apiURL = `${window.location.protocol}//${window.location.hostname}/data/getNbrOfDeaths?Country=${this.Country}`
-			} else {
-				apiURL = `${process.env.SERVER_URL}data/getNbrOfDeaths?Country=${this.Country}`
+			for (const country of this.chartCountries) {
+				if (typeof process.env.SERVER_URL == "undefined") {
+					apiURL = `${window.location.protocol}//${window.location.hostname}/data/getData?Country=${country}&GroupByCountry=true`
+				} else {
+					apiURL = `${process.env.SERVER_URL}data/getData?Country=${country}`
+				}
+
+				axios.get(apiURL).then((resp) => {
+					this.NbrOfDeaths.push({
+						Country: country,
+						Cases: resp.data
+					})
+				})
 			}
-
-			axios.get(apiURL).then((resp) => {
-				this.NbrOfDeaths = resp.data
-			})
 		},
 		getNbrRecovered() {
 			let apiURL = ""
+			let result = []
 
-			if (typeof process.env.SERVER_URL == "undefined") {
-				apiURL = `${window.location.protocol}//${window.location.hostname}/data/getData?Country=${this.Country}`
-			} else {
-				apiURL = `${process.env.SERVER_URL}data/getActiveCases?Country=${this.Country}`
+			for (const country of this.chartCountries) {
+				if (typeof process.env.SERVER_URL == "undefined") {
+					apiURL = `${window.location.protocol}//${window.location.hostname}/data/getData?Country=${country}&GroupByCountry=true`
+				} else {
+					apiURL = `${process.env.SERVER_URL}data/getData?Country=${country}`
+				}
+
+				axios.get(apiURL).then((resp) => {
+					this.NbrRecovered.push({
+						Country: country,
+						Cases: resp.data
+					})
+				})
 			}
-
-			axios.get(apiURL).then((resp) => {
-				this.NbrRecovered = resp.data
-			})
 		},
 	}
 };

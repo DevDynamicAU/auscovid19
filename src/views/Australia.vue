@@ -27,6 +27,7 @@
 				<ActiveChart 
 					style="height:500px; margin-top:40px;"
 					:chartData="ActiveCases"
+					:mainCountry="Country"
 					:countries="chartCountries"
 					:lineWidth=3 />
 			</CCardBody>
@@ -72,6 +73,7 @@
 				<ConfirmedChart 
 					style="height:300px; margin-top:40px;"
 					:chartData="ConfirmedCases"
+					:mainCountry="Country"
 					:countries="chartCountries"
 					:lineWidth=3 />
 			</CCardBody>
@@ -117,6 +119,7 @@
 				<NbrOfDeathsChart 
 					style="height:500px; margin-top:40px;"
 					:chartData="NbrOfDeaths"
+					:mainCountry="Country"
 					:countries="chartCountries"
 					:lineWidth=3 />
 			</CCardBody>
@@ -162,6 +165,7 @@
 				<NbrRecoveredChart 
 					style="height:500px; margin-top:40px;"
 					:chartData="NbrRecovered"
+					:mainCountry="Country"
 					:countries="chartCountries"
 					:lineWidth=3 />
 			</CCardBody>
@@ -212,7 +216,6 @@ export default {
 		};
 	},
 	mounted: function () {
-		//this.getLabels();
 		this.getActiveCases();
 		this.getConfirmedCases();
 		this.getNbrOfDeaths();
@@ -226,7 +229,7 @@ export default {
 			let result = -1
 
 			if (this.ActiveCases.length > 0) {
-				result = this.ActiveCases.filter(v => v.type == "Total")[0].count 
+				result = this.ActiveCases.filter(v => v.type == "Totals")[0].Active
 			}
 
 			return {
@@ -238,7 +241,7 @@ export default {
 			let result = -1
 
 			if (this.ConfirmedCases.length > 0) {
-				result = this.ConfirmedCases.filter(v => v.type == "Total")[0].count 
+				result = this.ConfirmedCases.filter(v => v.type == "Totals")[0].Confirmed
 			}
 
 			return result
@@ -247,7 +250,7 @@ export default {
 			let result = -1
 
 			if (this.NbrOfDeaths.length > 0) {
-				result = this.NbrOfDeaths.filter(v => v.type == "Total")[0].count 
+				result = this.NbrOfDeaths.filter(v => v.type == "Totals")[0].Deaths
 			}
 
 			return result
@@ -256,7 +259,7 @@ export default {
 			let result = -1
 
 			if (this.NbrRecovered.length > 0) {
-				result = this.NbrRecovered.filter(v => v.type == "Total")[0].count 
+				result = this.NbrRecovered.filter(v => v.type == "Totals")[0].Recovered
 			}
 
 			return {
@@ -271,7 +274,7 @@ export default {
 			let apiURL = ""
 
 			if (typeof process.env.SERVER_URL == "undefined") {
-				apiURL = `${window.location.protocol}//${window.location.hostname}/data/getActiveCases?Country=${this.Country}`
+				apiURL = `${window.location.protocol}//${window.location.hostname}/data/getData?Country=${this.Country}`
 			} else {
 				apiURL = `${process.env.SERVER_URL}data/getActiveCases?Country=${this.Country}`
 			}
@@ -284,7 +287,7 @@ export default {
 			let apiURL = ""
 
 			if (typeof process.env.SERVER_URL == "undefined") {
-				apiURL = `${window.location.protocol}//${window.location.hostname}/data/getConfirmedCases?Country=${this.Country}`
+				apiURL = `${window.location.protocol}//${window.location.hostname}/data/getData?Country=${this.Country}`
 			} else {
 				apiURL = `${process.env.SERVER_URL}data/getActiveCases?Country=${this.Country}`
 			}
@@ -297,7 +300,7 @@ export default {
 			let apiURL = ""
 
 			if (typeof process.env.SERVER_URL == "undefined") {
-				apiURL = `${window.location.protocol}//${window.location.hostname}/data/getNbrOfDeaths?Country=${this.Country}`
+				apiURL = `${window.location.protocol}//${window.location.hostname}/data/getData?Country=${this.Country}`
 			} else {
 				apiURL = `${process.env.SERVER_URL}data/getNbrOfDeaths?Country=${this.Country}`
 			}

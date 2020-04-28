@@ -4,7 +4,7 @@ const fastCSV = require('fast-csv')
 const cliProgress = require('cli-progress')
 const logger = require('../../config/logger')
 const ModuleFile = logger.getModuleName(module)
-const utils = require('../../app/middleware/utils')
+const utils = require('./utils')
 const _colors = require('colors');
 const dateFNS = require('date-fns')
 
@@ -111,7 +111,6 @@ const loadData = async () => {
 	}
 
 	pb.stop();
-	console.log('reading files - done')
 }
 
 data.load = async () => {
