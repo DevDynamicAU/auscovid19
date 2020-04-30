@@ -1,5 +1,3 @@
-const logger = require('../../config/logger')
-const ModuleFile = logger.getModuleName(module)
 const dateFNS = require('date-fns')
 
 // From https://www.restapitutorial.com/httpstatuscodes.html
@@ -38,8 +36,6 @@ const HTTPResp = {
  * @param {string} file - filename
  */
 exports.removeExtensionFromFile = file => {
-	const _logger = logger.child({file: ModuleFile, method: 'removeExtensionFromFile' })
-
 	return file.split('.')
 				.slice(0, -1)
 				.join('.')
@@ -53,7 +49,6 @@ exports.removeExtensionFromFile = file => {
  * @returns {string}
  */
 exports.getPhrase = (arr, basePhrase) => {
-	const _logger = logger.child({file: ModuleFile, method: 'getPhrase' })
 	if (arr.length > 1) {
 		return `${basePhrase}s`
 	} else {
@@ -67,8 +62,6 @@ exports.getPhrase = (arr, basePhrase) => {
  * @param {Object} err - error object
  */
 exports.handleError = (res, err) => {
-	const _logger = logger.child({file: ModuleFile, method: 'handleError' })
-
 	if (typeof err.code == "undefined") {
 		err.code = HTTPResp.InternalServerError
 	}
@@ -80,13 +73,6 @@ exports.handleError = (res, err) => {
 
 		if (typeof err.message == 'string') {
 			err.message = err.message.split(',')
-		}
-
-		for (let ErrorMsg of err.message) {
-			const ErrParm = ErrorMsg.param ? ErrorMsg.param : ErrorMsg
-			const ErrSuffix = ErrorMsg.msg ? `is ${ErrorMsg.msg} from ${ErrorMsg.location}` : ''
-
-			_logger.error(`Code : ${err.code}, Message: ${ErrParm} ${ErrSuffix}`)
 		}
 	}
 
@@ -104,8 +90,6 @@ exports.handleError = (res, err) => {
  * @param {string} message - error text
  */
 exports.buildErrObject = (code, message) => {
-	const _logger = logger.child({file: ModuleFile, method: 'buildErrObject' })
-
 	return {
 		code,
 		message
@@ -117,8 +101,6 @@ exports.buildErrObject = (code, message) => {
  * @param {string} message - success text
  */
 exports.buildSuccObject = message => {
-	const _logger = logger.child({file: ModuleFile, method: 'buildSuccObject' })
-
 	return {
 		msg: message
 	}
@@ -144,11 +126,7 @@ exports.sortByDate = (arrData) => {
 
 exports.getPropertyTotal = (arrData, propertyName) => {
 	const result = arrData.reduce((total, b) => {
-		//const _a = Number(a)
-		const _b = !Number.isNaN(Number(b[propertyName])) ? Number(b[propertyName]) : 0 
-		
-		//console.log(total, _b, propertyName, 'ff')
-		return total + _b
+		return total + (!Number.isNaN(Number(b[propertyName])) ? Number(b[propertyName]) : 0 )
 	}, 0)
 
 	return result

@@ -2,11 +2,8 @@ const path = require('path')
 const fs = require('fs')
 const fastCSV = require('fast-csv')
 const cliProgress = require('cli-progress')
-const logger = require('../../config/logger')
-const ModuleFile = logger.getModuleName(module)
 const utils = require('./utils')
 const _colors = require('colors');
-const dateFNS = require('date-fns')
 
 let data = {};
 let csvData = [];
@@ -17,8 +14,6 @@ let fileDate = "";
 const allowedCountries = ["Australia", "US"]
 
 const loadData = async () => {
-	const _logger = logger.child({file : ModuleFile, method: "loadData"})
-
 	let dirFiles = await fs.readdirSync(process.env.DATA_DIR, (err, files) => {
 		if (err) {
 			console.error(`Unable to read ${process.env.DATA_DIR}`)
@@ -79,7 +74,6 @@ const loadData = async () => {
 							activeCases = Number(csvRow.Active)
 						} else {
 							if (csvRow.Confirmed) {
-								//console.log('getting active from confirmed cases')
 								activeCases = confirmedCases - nbrOfDeaths - nbrRecovered
 							}
 						}
@@ -96,28 +90,18 @@ const loadData = async () => {
 							Active: activeCases
 						}
 						
-						//csvData.push(csvRow);
 						csvData.push(data);
 					}
-				} else {
-					//console.log(`${allowedCountries.indexOf(csvRow.CountryRegion)} : ${csvRow.CountryRegion}`)
 				}
-
 			})
-			.on("end", (s) => {
-				//console.log(existingData.filter(v => v.LastUpdate == "13-03-2020"), 'this is the end')
-				//console.log('done!')
-			})
+			.on("end", () => { })
 	}
 
 	pb.stop();
 }
 
 data.load = async () => {
-	const _logger = logger.child({file : ModuleFile, method: "load"})
-
 	if (!createPromise) {
-		_logger.info('No data has been loaded - loading now')
 		createPromise = loadData()
 	}
 
@@ -130,10 +114,8 @@ data.returnData = (reqCountry, summaryByCountry = false) => {
 	let summarizedArray = []
 	let dayData = []
 
-	console.log(`filtering by ${countryFilter}`)
 
 	if (!summaryByCountry) {
-		console.log('not summarizing by country')
 		const sortedData = utils.sortByDate(csvData.filter(v => v.CountryRegion == countryFilter ))
 
 		return sortedData
@@ -142,7 +124,6 @@ data.returnData = (reqCountry, summaryByCountry = false) => {
 			// 1. Loop the date's in csvData
 			// 2. for each date, sum the data
 			for (const updateDate of availDates) {
-				//console.log(updateDate, 'update date')
 				dayData = csvData.filter((v) => {
 					return v.CountryRegion == countryFilter && v.LastUpdate == updateDate
 				})
