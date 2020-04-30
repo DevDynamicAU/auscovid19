@@ -59,7 +59,7 @@ export default {
 		chartData: Array,
 		lineWidth: Number,
 		mainCountry: String,
-		//countries: Array,
+		countries: Array,
 		chartType: String,
 		chartTitle: String,
 		axesScale: String
@@ -77,7 +77,6 @@ export default {
 
 			for (const country of countries) {
 				let countryCases = []
-				console.log(`processing ${country}`)
 				// Get the cases for the country
 				if (this.chartData.filter(v => v.Country == country).length > 0) {
 					countryCases = this.chartData.filter(v => v.Country == country)[0].Cases.filter( v => v.type != "Totals" );
@@ -94,7 +93,6 @@ export default {
 						const waColour = "black"
 
 						const QLD = this.getCaseValues(countryCases, v => v.ProvinceState == "Queensland");
-						console.log(QLD, countryCases, 'qld')
 						const NSW = this.getCaseValues(countryCases, v => v.ProvinceState == "New South Wales");
 						const ACT = this.getCaseValues(countryCases, v => v.ProvinceState == "Australian Capital Territory");
 						const VIC = this.getCaseValues(countryCases, v => v.ProvinceState == "Victoria");
@@ -228,7 +226,7 @@ export default {
 								if (chart.type == "logarithmic") {
 									
 									// Maximum number of tick values we want
-									var maxTicks = 10;
+									var maxTicks = 20;
 									var maxLog = Math.log(chart.ticks[0]);
 									var minLogDensity = maxLog / maxTicks;
 
