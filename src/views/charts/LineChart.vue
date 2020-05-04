@@ -46,7 +46,7 @@
 
 <script>
 import { CChartLine } from "@coreui/vue-chartjs";
-import { getStyle, hexToRgba } from "@coreui/utils/src";
+//import { getStyle, hexToRgba } from "@coreui/utils/src";
 import { parse, differenceInCalendarDays, addDays, format } from 'date-fns'
 import _ from 'lodash'
 
@@ -80,6 +80,8 @@ export default {
 				// Get the cases for the country
 				if (this.chartData.filter(v => v.Country == country).length > 0) {
 					countryCases = this.chartData.filter(v => v.Country == country)[0].Cases.filter( v => v.type != "Totals" );
+				} else {
+					console.log(`unable to find the data for ${country}`)
 				}
 
 				if (this.mainCountry.toLowerCase() == "australia") {
@@ -126,16 +128,23 @@ export default {
 										backgroundColor: "transparent", borderColor: waColour,  pointHoverBackgroundColor: waColour, borderWidth: this.lineWidth,  data: WA  })
 
 				} else {
-					const countryColour = this.validCountries.filter(v => v.country == country)[0].colour
+					const countryDetails = this.validCountries.filter(v => v.country == country)
+					let countryColour = "black"
+
+					if (countryDetails.length > 0 ) {
+						countryColour = countryDetails[0].colour
+					}
 
 					if (countryCases.length > 0) {
 						// Inserts data for the missing days when additional countries don't have the same data. Returns the country cases
 						let completeData = this.addMissingDates( country, countryCases )
-						let countryData = completeData.map( v => v.Active );
+						
+						// Get the totals for the chart.
+						let countryData = this.getCaseValues(completeData);
 
 						dataSets.push({ label: country,
-										backgroundColor: "transparent",
-										borderColor: countryColour, pointHoverBackgroundColor: countryColour,borderWidth: this.lineWidth, data: countryData })
+										backgroundColor: 'transparent',
+										borderColor: countryColour, pointHoverBackgroundColor: countryColour, borderWidth: this.lineWidth, data: countryData })
 					}
 				}
 			}
@@ -164,13 +173,20 @@ export default {
 			}
 		},
 		validCountries() {
-			return [{
-				country: "US",
-				colour: "blue"
-			}, {
-				country: "Australia",
-				colour: "gold"
-			}]
+			return [
+				{
+					country: "US",
+					colour: "blue"
+				},
+				{
+					country: "Australia",
+					colour: "gold"
+				},
+				{
+					country: "United Kingdom",
+					colour: "red"
+				}
+			]
 		},
 		chartLabels() {
 			// Holds the extracted labels
@@ -194,6 +210,42 @@ export default {
 				responsive: true,
 				legend: {
 					display: true
+				},
+				tooltips: {
+					enabled: true,
+					mode: "index",
+					multiKeyBackground: "#FFF", //"#333", // This should be the same as the background to prevent the whitebox
+					defaultFontFamily: 'Consolas',
+					titleFontSize: 15,
+					bodyFontSize: 15,
+					bodyAlign: 'right',
+					position: 'nearest',
+					itemSort: function(i0, i1) {
+						var v0 = Number(i0.value);
+						var v1 = Number(i1.value);
+
+						// Sort so that the country with the largest value is on top
+						return v0 > v1 ? -1 : 1 
+					},
+					callbacks: {
+						label: (tooltipItem, data) => {
+							var datasetLabel = data.datasets[tooltipItem.datasetIndex].label + ':' || '';
+
+							let val = Number(tooltipItem.value).toLocaleString().padStart(10);
+							let label = val
+
+							return `${label}`;
+						},
+						
+						labelColor: function(tooltipItem, chart) {
+							let countryColour = chart.data.datasets[tooltipItem.datasetIndex].pointHoverBackgroundColor
+							
+							return { backgroundColor: countryColour };
+						},
+					// 	// labelTextColor: function(tooltipItem, chart) {
+					// 	// 	return '#543453';
+					// 	// }
+					}
 				},
 				scales: {
 					xAxes: [
@@ -262,56 +314,78 @@ export default {
 	},
 	methods: {
 		getCaseValues(countryCases, caseFilter, valueType) {
-			
 			// Make sure we have a value for valueType
 			valueType = typeof valueType == "undefined" ? this.chartType : valueType
+			//console.log(`starting getCaseValues(${valueType})`)
 
 			switch (valueType.toLowerCase()) {
 				case "active":
-					return countryCases.filter( caseFilter ).map( v => v.Active );
+					if (typeof caseFilter != "undefined") {
+						return countryCases.filter( caseFilter ).map( v => v.Active );
+					} else {
+						return countryCases.map( v => v.Active );
+					}
 				
 				case "confirmed":
-					return countryCases.filter( caseFilter ).map( v => v.Confirmed )
+					if (typeof caseFilter != "undefined") {
+						return countryCases.filter( caseFilter ).map( v => v.Confirmed );
+					} else {
+						return countryCases.map( v => v.Confirmed );
+					}
 				
 				case "deaths":
-					return countryCases.filter( caseFilter ).map( v => v.Deaths )
+					if (typeof caseFilter != "undefined") {
+						return countryCases.filter( caseFilter ).map( v => v.Deaths );
+					} else {
+						return countryCases.map( v => v.Deaths );
+					}
 				
 				case "recovered":
-					return countryCases.filter( caseFilter ).map( v => v.Recovered )
+					if (typeof caseFilter != "undefined") {
+						return countryCases.filter( caseFilter ).map( v => v.Recovered );
+					} else {
+						return countryCases.map( v => v.Recovered );
+					}
 			}
 		},
 		addMissingDates(country, countryCases) {
 			// function will adjust the chart data so that every country starts at the same point as the mainCountry
+			//console.log(`starting addMissingDates (${country})`)
 
 			// No use doing this for the maincountry
 			if ( country.toLowerCase() != this.mainCountry.toLowerCase() ) {
-				const countryFirstDate = parse(countryCases.map(v => v.LastUpdate)[0], 'dd-MM-yyyy', new Date())
-				const mainCountryFirstDate = parse(this.chartData.filter(v => v.Country == this.mainCountry)[0].Cases.map(v => v.LastUpdate)[0], 'dd-MM-yyyy', new Date())
-				const nbrOfMissingDays = differenceInCalendarDays(countryFirstDate, mainCountryFirstDate)
+				// let nbrOfMissingDays = 0
+				// let mainCountryFirstDate
+				let mainCountryDates = []
+				let countryDates = []
+				let missingDates = []
 
-				// Loop by the number of missing days, creating a dummy record and inserting it into our data
-				for (let i = 0; i < nbrOfMissingDays; i++) {
-					// Get the new date
-					let newDate = addDays(mainCountryFirstDate, i)
+				//let dateRecords = caseData.filter(v => v.LastUpdate == itm.LastUpdate)
+				if ( this.chartData.filter(v => v.Country == this.mainCountry).length > 0) {
+					countryDates = countryCases.map( v => v.LastUpdate )
+					mainCountryDates = this.chartData.filter( v => v.Country == this.mainCountry )[0].Cases.filter(v => v.type != "Totals").map(v => v.LastUpdate)
+					missingDates = mainCountryDates.filter(v => !countryDates.includes(v) )
 
-					let dummyRecord = {
-						City: '',
-						ProvinceState: '',
-						CountryRegion: country,
-						LastUpdate: format(newDate, 'dd-MM-yyyy'),
-						Confirmed: 0,
-						Deaths: 0,
-						Recovered: 0,
-						Active: 0,
-						AssumedData: true
-					}
+					if ( missingDates.length > 0 ) {
+						// Loop the missing days, creating a dummy record and inserting it into our data
+						for (let aDate of missingDates) {
+							let dummyRecord = {
+								City: '',
+								ProvinceState: '',
+								CountryRegion: country,
+								LastUpdate: aDate,
+								Confirmed: 0,
+								Deaths: 0,
+								Recovered: 0,
+								Active: 0,
+								AssumedData: true
+							}
 
-					// Insert the dummyRecord into the countries cases
-					countryCases.push(dummyRecord)
-				}
+							// Insert the dummyRecord into the countries cases
+							countryCases.push(dummyRecord)
+						}
 
-				// Return a re-sorted list of data for the country
-				return countryCases.sort((a, b) => { 
+						return countryCases.sort((a, b) => { 
 							// Convert the strings into date objects for comparisons
 							const aDate = parse(a.LastUpdate, 'dd-MM-yyyy', new Date())
 							const bDate = parse(b.LastUpdate, 'dd-MM-yyyy', new Date())
@@ -319,8 +393,14 @@ export default {
 							// return if the date is > the next date
 							return aDate > bDate ? 1 : -1 
 						})
+					}
+					
+				}
+
+				// If we get to here, then we just need to return what was passed in
+				return countryCases
 			} else {
-				// we just need to return the countryCases when it's the mainCountry
+				console.log(`skipping ${country} : ${this.mainCountry}`)
 				return countryCases
 			}
 		}

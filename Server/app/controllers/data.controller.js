@@ -48,7 +48,6 @@ exports.getData = async (req, res) => {
 			caseData = data.filterByState(state)
 		} else {
 			caseData = data.returnData(reqCountry, summaryData)
-
 			// if we are getting data for australia, and its not being summarised, then we need to force the state data if its missing.
 			// if it is being summarised, then forceStateData should be false
 			if ( reqCountry.toLowerCase() == "australia") {
@@ -84,37 +83,40 @@ exports.getData = async (req, res) => {
 		}
 
 		const sortedData = utils.sortByDate(caseData)
-		
-		const lastDate = sortedData[sortedData.length - 1].LastUpdate
-		
-		let totalConfirmed = -1
-		let totalDeaths = -1
-		let totalRecovered = -1
-		let totalActive = -1
-		
-		// add a total number of active cases
-		if (!summaryData) {
-			totalConfirmed = sortedData.filter(v => v.LastUpdate == lastDate).map(v => v.Confirmed).reduce((a,b) => a + b, 0)
-			totalDeaths = sortedData.filter(v => v.LastUpdate == lastDate).map(v => v.Deaths).reduce((a,b) => a + b, 0)
-			totalRecovered = sortedData.filter(v => v.LastUpdate == lastDate).map(v => v.Recovered).reduce((a,b) => a + b, 0)
-			totalActive = sortedData.filter(v => v.LastUpdate == lastDate).map(v => v.Active).reduce((a,b) => a + b, 0)
-		} else {
-			// this is for countries like the use who use summary data.
-			totalConfirmed = sortedData[sortedData.length - 1].Confirmed
-			totalDeaths = sortedData[sortedData.length - 1].Deaths
-			totalRecovered = sortedData[sortedData.length - 1].Recovered
-			totalActive = sortedData[sortedData.length - 1].Active
-		}
-		
-		dummyRecord = {
-			type: 'Totals',
-			Confirmed: totalConfirmed,
-			Deaths: totalDeaths,
-			Recovered: totalRecovered,
-			Active: totalActive,
-		}
 
-		sortedData.push(dummyRecord)
+		// Make sure we have some data to work with
+		if (sortedData.length > 0) {
+			const lastDate = sortedData[sortedData.length - 1].LastUpdate
+		
+			let totalConfirmed = -1
+			let totalDeaths = -1
+			let totalRecovered = -1
+			let totalActive = -1
+			
+			// add a total number of active cases
+			if (!summaryData) {
+				totalConfirmed = sortedData.filter(v => v.LastUpdate == lastDate).map(v => v.Confirmed).reduce((a,b) => a + b, 0)
+				totalDeaths = sortedData.filter(v => v.LastUpdate == lastDate).map(v => v.Deaths).reduce((a,b) => a + b, 0)
+				totalRecovered = sortedData.filter(v => v.LastUpdate == lastDate).map(v => v.Recovered).reduce((a,b) => a + b, 0)
+				totalActive = sortedData.filter(v => v.LastUpdate == lastDate).map(v => v.Active).reduce((a,b) => a + b, 0)
+			} else {
+				// this is for countries like the use who use summary data.
+				totalConfirmed = sortedData[sortedData.length - 1].Confirmed
+				totalDeaths = sortedData[sortedData.length - 1].Deaths
+				totalRecovered = sortedData[sortedData.length - 1].Recovered
+				totalActive = sortedData[sortedData.length - 1].Active
+			}
+		
+			dummyRecord = {
+				type: 'Totals',
+				Confirmed: totalConfirmed,
+				Deaths: totalDeaths,
+				Recovered: totalRecovered,
+				Active: totalActive,
+			}
+
+			sortedData.push(dummyRecord)
+		}
 		
 		res.status(utils.HTTPResp.OK).json(sortedData)
 	} catch (err) {

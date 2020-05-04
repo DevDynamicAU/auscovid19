@@ -38,8 +38,6 @@
 <script>
 import LineChart from "./charts/LineChart";
 
-import fs from 'fs'
-import path from 'path'
 import axios from 'axios'
 
 export default {

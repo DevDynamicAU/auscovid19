@@ -124,11 +124,42 @@ exports.sortByDate = (arrData) => {
 	})
 }
 
+// Define a list of previous values to use when getting the property total's
+let prevValues = {
+	Confirmed: 0,
+	Deaths: 0,
+	Recovered: 0,
+	Active: 0
+}
+
+exports.clearPrevValues = () => {
+	prevValues = {
+		Confirmed: 0,
+		Deaths: 0,
+		Recovered: 0,
+		Active: 0
+	}
+}
+
 exports.getPropertyTotal = (arrData, propertyName) => {
-	const result = arrData.reduce((total, b) => {
-		return total + (!Number.isNaN(Number(b[propertyName])) ? Number(b[propertyName]) : 0 )
+	const prevDate = dateFNS.format( dateFNS.parse(arrData[0].LastUpdate, "dd-MM-yyyy", new Date()), "dd-MM-yyyy")
+
+	
+	let result = arrData.reduce((total, b) => {
+		return total + (!Number.isNaN(Number(b[propertyName])) ? Number(b[propertyName]) : -100 )
 	}, 0)
 
+	// if the result is 0, and our previous Value isn't, then we need to use the previous value.
+	// This is to account for days where the country didn't supply data for this property.
+	
+	// We need to not process the Active property though, as this is later reset to totalConfirmed.
+	if ( result == 0 && prevValues[propertyName] != 0 && propertyName != "Active") {
+		result = prevValues[propertyName]
+	}
+
+	// Update the previous value with the result.
+	prevValues[propertyName] = result
+	
 	return result
 }
 

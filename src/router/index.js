@@ -7,6 +7,7 @@ const TheContainer = () => import('@/containers/TheContainer')
 // Views
 const Australia = () => import('@/views/Australia')
 const USA = () => import('@/views/USA')
+const UnitedKingdom = () => import('@/views/UnitedKingdom')
 
 Vue.use(Router)
 
@@ -36,6 +37,11 @@ function configRoutes() {
 					path: 'USA',
 					name: 'USA',
 					component: USA
+				},
+				{
+					path: 'UnitedKingdom',
+					name: 'United Kingdom',
+					component: UnitedKingdom
 				}
 			]
 		}

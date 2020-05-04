@@ -11,7 +11,8 @@ let targetFiles = [];
 let createPromise = null;
 let fileDate = "";
 
-const allowedCountries = ["Australia", "US"]
+// We need to include UK and United Kingdom to get all records. UK will be corrected to United Kingdom before the data is returned
+const allowedCountries = ["Australia", "US", "UK", "United Kingdom"]
 
 const loadData = async () => {
 	let dirFiles = await fs.readdirSync(process.env.DATA_DIR, (err, files) => {
@@ -38,7 +39,7 @@ const loadData = async () => {
 		barCompleteChar: '\u2588',
 		barIncompleteChar: '\u2591',
 		hideCursor: true
-	}, cliProgress.Presets.rect);
+	}, cliProgress.Presets.rect); /* cspell: disable-line */
 
 	pb.start(targetFiles.length, 0, {
 		speed: "N/A"
@@ -57,41 +58,38 @@ const loadData = async () => {
 				let activeCases = 0
 				let confirmedCases = 0
 				let nbrOfDeaths = 0
+				let nbrRecovered = 0
 
-				// do something with csvRow
+				// do something with csvRow if we are processing an allowed Country
 				if ( allowedCountries.indexOf(csvRow.CountryRegion) >= 0) {
 
-					// We need to have some state
-					if (csvRow.ProvinceState.length > 0) {
-						
-						fileDate = utils.formatFileDate(path.basename(file, '.csv'))
+					fileDate = utils.formatFileDate(path.basename(file, '.csv'))
 
-						confirmedCases = !Number.isNaN(Number(csvRow.Confirmed)) ? Number(csvRow.Confirmed) : 0
-						nbrOfDeaths = !Number.isNaN(Number(csvRow.Deaths)) ? Number(csvRow.Deaths) : 0
-						nbrRecovered = !Number.isNaN(Number(csvRow.Recovered)) ? Number(csvRow.Recovered) : 0
+					confirmedCases = !Number.isNaN(Number(csvRow.Confirmed)) ? Number(csvRow.Confirmed) : 0
+					nbrOfDeaths = !Number.isNaN(Number(csvRow.Deaths)) ? Number(csvRow.Deaths) : 0
+					nbrRecovered = !Number.isNaN(Number(csvRow.Recovered)) ? Number(csvRow.Recovered) : 0
 
-						if (csvRow.Active) {
-							activeCases = Number(csvRow.Active)
-						} else {
-							if (csvRow.Confirmed) {
-								activeCases = confirmedCases - nbrOfDeaths - nbrRecovered
-							}
+					if (csvRow.Active) {
+						activeCases = Number(csvRow.Active)
+					} else {
+						if (csvRow.Confirmed) {
+							activeCases = confirmedCases - nbrOfDeaths - nbrRecovered
 						}
-
-						// Fix the last update column to be the date of the file
-						let data = {
-							City: typeof csvRow.Admin2 == "undefined" ? '' : csvRow.Admin2,
-							ProvinceState: csvRow.ProvinceState,
-							CountryRegion: csvRow.CountryRegion,
-							LastUpdate: fileDate,
-							Confirmed: confirmedCases,
-							Deaths: nbrOfDeaths,
-							Recovered: nbrRecovered,
-							Active: activeCases
-						}
-						
-						csvData.push(data);
 					}
+
+					// Fix the last update column to be the date of the file
+					let data = {
+						City: typeof csvRow.Admin2 == "undefined" ? '' : csvRow.Admin2, /* cspell: disable-line */
+						ProvinceState: typeof csvRow.ProvinceState != "undefined" ? csvRow.ProvinceState : "",
+						CountryRegion: csvRow.CountryRegion == "UK" ? "United Kingdom" : csvRow.CountryRegion,
+						LastUpdate: fileDate,
+						Confirmed: confirmedCases,
+						Deaths: nbrOfDeaths,
+						Recovered: nbrRecovered,
+						Active: activeCases
+					}
+						
+					csvData.push(data);
 				}
 			})
 			.on("end", () => { })
@@ -123,6 +121,7 @@ data.returnData = (reqCountry, summaryByCountry = false) => {
 	} else {
 			// 1. Loop the date's in csvData
 			// 2. for each date, sum the data
+
 			for (const updateDate of availDates) {
 				dayData = csvData.filter((v) => {
 					return v.CountryRegion == countryFilter && v.LastUpdate == updateDate
@@ -150,6 +149,9 @@ data.returnData = (reqCountry, summaryByCountry = false) => {
 
 				summarizedArray.push(summarizedData)
 			}
+
+			// reset the values now we have finished looping. This reset's them for next time the api is called.
+			utils.clearPrevValues();
 
 			// 3. return the summarized data
 			return utils.sortByDate(summarizedArray)

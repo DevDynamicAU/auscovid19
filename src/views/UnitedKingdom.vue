@@ -46,9 +46,9 @@ export default {
 	},
 	data() {
 		return {
-			Country: "Australia",
+			Country: "United Kingdom",
 			caseData: [],
-			defaultAxesType: "linear"
+			defaultAxesType: "logarithmic"
 		};
 	},
 	mounted: function () {
@@ -56,7 +56,7 @@ export default {
 	},
 	computed: {
 		chartCountries: function () {
-			return [this.Country]
+			return [this.Country, "US", "Australia"]
 		},
 	},
 	methods: {

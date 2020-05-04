@@ -26,11 +26,7 @@ import {
 import {
   cifUs,
   cifAu,
-  cifBr,
-  cifIn,
-  cifFr,
-  cifEs,
-  cifPl
+  cifGb,
 } from '@coreui/icons'
 import {
   cilArrowRight,
@@ -135,11 +131,7 @@ export const iconsSet = Object.assign(
   {
 	cifUs,
 	cifAu,
-    cifBr,
-    cifIn,
-    cifFr,
-    cifEs,
-    cifPl
+    cifGb,
   },
   {
     cibFacebook,

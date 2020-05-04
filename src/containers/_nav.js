@@ -10,11 +10,17 @@ export default [{
 		},
 		{
 			_name: 'CSidebarNavItem',
-			name: 'USA (Beta)',
+			name: 'USA',
 			to: '/USA',
 			icon: 'cifUs',
-			className: 'something-here',
 			badge: {}
 		},
+		{
+			_name: 'CSidebarNavItem',
+			name: 'United Kingdom',
+			to: '/UnitedKingdom',
+			icon: 'cifGb',
+			badge: {}
+		}
 	]
 }]
