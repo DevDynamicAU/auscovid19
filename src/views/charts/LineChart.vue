@@ -30,14 +30,21 @@
 		<CCardFooter>
 			<CRow class="text-center w-25">
 				<CCol md sm="12" class="mb-sm-2 mb-0">
-					<div class="text-muted" v-if="chartType!='Confirmed'">{{ chartType }} / Total Confirmed Cases</div>
-					<strong>{{ total.value }} / {{ total.confirmed }}</strong>
-					<CProgress
-						class="progress-xs mt-2"
-						:precision="1"
-						color="success"
-						:value="total.pct"
-					/>
+					<div v-if="chartType!='Confirmed'">
+						<div class="text-muted" v-if="chartType!='Confirmed'">{{ chartType }} / Total Confirmed Cases</div>
+						<strong >{{ total.value }} / {{ total.confirmed }} ({{ total.pct.toFixed(2) }}%)</strong>
+						<CProgress
+							class="progress-xs mt-2"
+							:precision="1"
+							color="success"
+							:value="total.pct"
+						/>
+					</div>
+					<div v-else>
+						<div class="text-muted">{{ chartType }}</div>
+						<strong >{{ total.confirmed }}</strong>
+						</div>
+					</div>
 				</CCol>
 			</CRow>
 		</CCardFooter>
@@ -160,8 +167,8 @@ export default {
 				let totalConfirmed = this.getCaseValues(countryCases[0].Cases, v => v.type == "Totals", "Confirmed")[0];
 
 				return {
-					value: result,
-					confirmed: totalConfirmed,
+					value: Number(result).toLocaleString(),
+					confirmed: Number(totalConfirmed).toLocaleString(),
 					pct: (result / totalConfirmed) * 100
 				}
 			} else {
