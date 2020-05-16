@@ -1,3 +1,6 @@
 [submodule "Data"]
 	path = Data
 	url = https://github.com/CSSEGISandData/COVID-19.git
+[submodule "OurWorldInData"]
+	path = OurWID
+	url = https://github.com/owid/covid-19-data.git
