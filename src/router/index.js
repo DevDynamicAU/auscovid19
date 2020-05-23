@@ -5,6 +5,7 @@ import Router from 'vue-router'
 const TheContainer = () => import('@/containers/TheContainer')
 
 // Views
+const Home = () => import('@/views/Home')
 const Australia = () => import('@/views/Australia')
 const USA = () => import('@/views/USA')
 const UnitedKingdom = () => import('@/views/UnitedKingdom')
@@ -24,10 +25,14 @@ function configRoutes() {
 	return [
 		{
 			path: '/',
-			redirect: '/australia',
 			name: 'Home',
 			component: TheContainer,
 			children: [
+				{
+					path: '',
+					name: '',
+					component: Home
+				},
 				{
 					path: 'Australia',
 					name: 'Australia',

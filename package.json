@@ -18,7 +18,8 @@
   "scripts": {
     "postinstall": "if test \"$NODE_ENV\" = \"production\" ; then npm run build ; fi ",
     "dev": "vue-cli-service serve",
-    "start": "npm run server",
+	"start": "npm run server",
+	"start:prod": "cross-env NODE_ENV=production concurrently \"yarn build\" \"yarn start\" ",
     "server": "node Server/server.js",
     "server:dev": "nodemon Server/server.js",
     "client": "vue-cli-service serve",

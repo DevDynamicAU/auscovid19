@@ -2,6 +2,13 @@ export default [{
 	_name: 'CSidebarNav',
 	_children: [
 		{
+			_name: "CSidebarNavItem",
+			name: "Home",
+			to: "/",
+			icon: "cil-home",
+			badge: {}
+		},
+		{
 			_name: 'CSidebarNavItem',
 			name: 'Australia',
 			to: '/Australia',
