@@ -126,3 +126,5 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw*
+.pm2
+.config
