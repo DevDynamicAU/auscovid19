@@ -26,6 +26,7 @@
     "serve:prod": "vue-cli-service serve --mode production",
     "build": "vue-cli-service build",
     "build:mem": "node --max_old_space_size=3000 node_modules/.bin/vue-cli-service build --open",
+    "build:data": "cd ./Data; git pull",
     "lint": "vue-cli-service lint",
     "test:unit": "vue-cli-service test:unit",
     "test:e2e": "vue-cli-service test:e2e",
